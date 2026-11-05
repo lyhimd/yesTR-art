@@ -17,13 +17,41 @@
   #live { mix-blend-mode: multiply; opacity: .88; pointer-events: none; }
   #over { cursor: crosshair; touch-action: none; }
 
+ 
   /* ---------- 左上：七彩調色盤 ---------- */
-  #palette {
+ /*-- #palette {
     position: absolute; top: 10px; left: 10px; z-index: 10;
     background: rgba(255,255,255,.9); border-radius: 20px; padding: 10px 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,.15);
-    max-width: calc(100vw - 236px);
+    max-width: calc(100vw - 236px); --*/
+   /* ---------- 左上 改成 底端：七彩調色盤 ---------- */
+  #palette {
+    position: fixed;            /* 改為固定定位，永遠黏在螢幕底部不隨捲軸飄走 */
+    bottom: 0; left: 0;         /* 靠緊網頁最底部與最左邊 */
+    width: 100vw;               /* 寬度填滿整個網頁畫面 (100%) */
+    height: 15vh;               /* 關鍵：高度精確佔用整個網頁畫面的 15% */
+    z-index: 10;
+    
+    background: rgba(255,255,255,.95); /* 稍微調高不透明度，避免下方的畫布內容干擾視覺 */
+    padding: 12px 20px;         /* 調整內邊距 */
+    box-sizing: border-box;     /* 確保 padding 不會撐大原本設定的 15% 高度 */
+    box-shadow: 0 -6px 16px rgba(0,0,0,.15); /* 向上投射的陰影，製造漂浮感 */
+    
+    /* 內部元件佈局優化 */
+    display: flex;              /* 變更為彈性佈局，讓原本上下的區塊變成左右橫向排列 */
+    align-items: center;        /* 垂直居中對齊 */
+    gap: 24px;                  /* 區塊之間的間距 */
+    overflow-x: auto;           /* 如果螢幕太窄，底部工具列可以左右滑動，元件不擠壓 */
+    overflow-y: hidden;         /* 隱藏垂直捲軸 */
   }
+
+  /* 配合橫向扁平化底欄，微調標題與邊距 */
+  #palette h1 { font-size: 13px; margin: 0 0 4px; color: #555; white-space: nowrap; }
+  #swatches { display: flex; flex-wrap: nowrap; gap: 8px; margin-bottom: 0; }
+  .actions { display: flex; gap: 8px; flex-wrap: nowrap; }
+  #angle-box { margin-bottom: 0; min-width: auto; }
+
+  } 
   #palette h1 { font-size: 14px; margin: 0 0 8px; color: #555; }
   #swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
   .swatch {
