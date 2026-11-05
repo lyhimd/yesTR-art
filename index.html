@@ -1,12 +1,9 @@
-
-rainbow_straw_blow_painting_v6_mobile.html
-100%
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>七彩虹吸管吹畫（平板／手機直式版）</title>
+<title>七彩虹吸管吹畫</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -14,7 +11,6 @@ rainbow_straw_blow_painting_v6_mobile.html
     background: #fcfaf2;
     font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
     touch-action: none; user-select: none; -webkit-user-select: none;
-    -webkit-touch-callout: none; overscroll-behavior: none;
   }
   #stage { position: fixed; inset: 0; isolation: isolate; background: #fcfaf2; }
   canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
@@ -23,8 +19,7 @@ rainbow_straw_blow_painting_v6_mobile.html
 
   /* ---------- 左上：七彩調色盤 ---------- */
   #palette {
-  /*--  position: absolute; top: 10px; left: 10px; z-index: 10; --*/
-   position: absolute; bottom: 10px; left: 10px; z-index: 10;
+    position: absolute; top: 10px; left: 10px; z-index: 10;
     background: rgba(255,255,255,.9); border-radius: 20px; padding: 10px 12px;
     box-shadow: 0 4px 12px rgba(0,0,0,.15);
     max-width: calc(100vw - 236px);
@@ -32,7 +27,7 @@ rainbow_straw_blow_painting_v6_mobile.html
   #palette h1 { font-size: 14px; margin: 0 0 8px; color: #555; }
   #swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
   .swatch {
-    position: relative; width: 46px; height: 46px; border-radius: 50%; 
+    position: relative; width: 46px; height: 46px; border-radius: 50%;
     border: 4px solid #fff; cursor: pointer; padding: 0;
     box-shadow: 0 3px 8px rgba(0,0,0,.25);
     transition: transform .12s ease, box-shadow .12s ease;
@@ -93,50 +88,6 @@ rainbow_straw_blow_painting_v6_mobile.html
     font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none;
   }
   #toast.show { opacity: 1; }
-  /* ---------- 平板／手機：直式版面 ---------- */
-  #more { display: none; }
-  #rotate {
-    display: none; position: fixed; inset: 0; z-index: 100; background: #fcfaf2;
-    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
-    text-align: center; padding: 24px; font-size: 20px; line-height: 1.6; color: #444;
-  }
-  #rotate b { font-size: 64px; }
-  @media (orientation: landscape) and (pointer: coarse) {
-    body:not(.allowland) #rotate { display: flex; }
-  }
-  @media (max-aspect-ratio: 1/1) {
-    :root { --mh: 54px; --ph: 92px; }
-    #stage { inset: calc(var(--mh) + var(--ph)) 0 0 0; }
-    #hint { display: none; }
-
-    /* 最上方：吹力偵測條 */
-    #meter-panel {
-      position: fixed; top: 0; left: 0; right: 0; width: auto; border-radius: 0 0 16px 16px;
-      padding: 6px 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; z-index: 12;
-    }
-    #meter-title { margin: 0; gap: 8px; white-space: nowrap; }
-    #meter-track { flex: 1; min-width: 100px; }
-    #mic-status { flex: 1 1 55%; margin: 0; text-align: left; font-size: 11px; }
-    #mic-btn { margin: 0; width: auto; padding: 7px 12px; }
-    #sheet #sens-row { margin: 8px 0 0; }
-
-    /* 其下：調色盤與按鈕（可展開設定） */
-    #palette {
-      position: fixed; top: var(--mh); left: 0; right: 0; max-width: none; border-radius: 0 0 18px 18px;
-      padding: 8px 10px; max-height: 62vh; overflow-y: auto; z-index: 11;
-    }
-    #palette > h1 { display: none; }
-    #swatches { flex-wrap: nowrap; justify-content: space-between; gap: 0; margin-bottom: 8px; }
-    .swatch { zoom: .72; }
-    #palette .actions { flex-wrap: nowrap; }
-    #palette .btn { flex: 1 1 auto; padding: 7px 6px; font-size: 13px; }
-    #sheet { display: none; }
-    body.open #sheet { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 13; max-height: 48vh; overflow-y: auto;
-      background: rgba(255,255,255,.97); border-radius: 18px 18px 0 0; padding: 12px; box-shadow: 0 -4px 14px rgba(0,0,0,.2); }
-    #sheet #angle-box { min-width: 0; }
-    #more { display: inline-block; }
-    input[type=range] { height: 30px; }
-  }
 </style>
 </head>
 <body>
@@ -149,18 +100,10 @@ rainbow_straw_blow_painting_v6_mobile.html
     <h1>🌈 七彩調色盤</h1>
     <div id="swatches"></div>
     <h1>🖼️ 畫布背景選擇</h1>
-    <div id="sheet">
     <div class="actions" id="bg-group" style="margin-bottom:8px">
       <button class="btn active" data-bg="blank">⬜ 空白畫布</button>
       <button class="btn" data-bg="hedgehog">🦔 小刺蝟</button>
       <button class="btn" data-bg="person">👤 百變髮型人物</button>
-      <button class="btn" data-bg="elephant">🐘 大象噴水</button>
-    </div>
-    <div class="actions" id="emo-group" style="margin-bottom:8px">
-      <button class="btn active" data-emo="happy">😊 開心</button>
-      <button class="btn" data-emo="angry">😠 生氣</button>
-      <button class="btn" data-emo="sad">😢 難過</button>
-      <button class="btn" data-emo="surprise">😲 驚訝</button>
     </div>
     <div id="angle-box">
       <h1>📐 吸管角度調整　<b id="angle-val">45°</b></h1>
@@ -173,11 +116,9 @@ rainbow_straw_blow_painting_v6_mobile.html
       </div>
       <div class="angle-ends"><span>🌊 低角度（大面積粗墨）</span><span>🌿 高角度（細緻樹枝）</span></div>
     </div>
-    </div>
     <div class="actions">
       <button class="btn" id="clear">🔄 清除重來</button>
       <button class="btn" id="save">💾 儲存作品</button>
-      <button class="btn" id="more">⚙️ 設定</button>
     </div>
   </div>
 
@@ -192,7 +133,6 @@ rainbow_straw_blow_painting_v6_mobile.html
   <div id="hint">① 選顏色　② 移動滑鼠，箭頭會指向方向　③ 按住不放，水滴越變越大　④ 對麥克風吹氣，水痕順箭頭衝出去（按住時拖曳可調整方向）　⑤ 調「吸管角度」改變墨水的粗細與形狀</div>
   <div id="toast"></div>
 </div>
-<div id="rotate"><b>📱↻</b><div>請把平板／手機轉成<strong>直式</strong><br>畫布才夠大，麥克風也在方便吹氣的位置</div><button class="btn" id="stay">仍要橫式使用</button></div>
 
 <script>
 (() => {
@@ -213,7 +153,7 @@ rainbow_straw_blow_painting_v6_mobile.html
   const $ = id => document.getElementById(id);
   const stage = $('stage'), paintC = $('paint'), liveC = $('live'), overC = $('over');
   const pctx = paintC.getContext('2d'), lctx = liveC.getContext('2d'), octx = overC.getContext('2d');
-  let W = 0, H = 0, DPR = 1, U = 1, sizeKey = '';
+  let W = 0, H = 0, DPR = 1;
 
   let colorIdx = 0, pressed = false, session = null, layerDirty = false, aim = -0.6;
   const tendrils = [];
@@ -239,9 +179,9 @@ rainbow_straw_blow_painting_v6_mobile.html
   });
 
   let toastTimer = null;
-  function toast(msg, ms) {
+  function toast(msg) {
     const t = $('toast'); t.textContent = msg; t.classList.add('show');
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2200);
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
   }
 
   // ---------------- 畫布 ----------------
@@ -275,11 +215,8 @@ rainbow_straw_blow_painting_v6_mobile.html
   function resize() {
     const nw = stage.clientWidth, nh = stage.clientHeight;
     if (!nw || !nh) return;
-    const coarse = matchMedia('(pointer: coarse)').matches;
-    const d = Math.min(coarse ? 1.5 : 2, window.devicePixelRatio || 1);
-    const key = nw + 'x' + nh + 'x' + d;
-    if (key === sizeKey) return;
-    sizeKey = key;   // 尺寸沒變就不動畫布，避免誤中斷按住中的創作
+    const d = Math.min(2, window.devicePixelRatio || 1);
+    if (nw === W && nh === H && d === DPR) return;   // 尺寸沒變就不動畫布，避免誤中斷按住中的創作
     finishAll(); commitLive();                        // 保留按住中的 session，只把已畫的墨水先定稿
     let old = null;
     if (W > 0) {
@@ -287,12 +224,12 @@ rainbow_straw_blow_painting_v6_mobile.html
       old.width = paintC.width; old.height = paintC.height;
       old.getContext('2d').drawImage(paintC, 0, 0);
     }
-    U = Math.max(0.5, Math.min(1, Math.min(nw, nh) / 600)); W = nw / U; H = nh / U; DPR = d * U;
+    W = nw; H = nh; DPR = d;
     if (session) session.drawnR = undefined;   // 縮放後重畫水滴
-    for (const c of [paintC, liveC, overC]) { c.width = Math.round(nw * d); c.height = Math.round(nh * d); }
-    pctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    lctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    for (const c of [paintC, liveC, overC]) { c.width = Math.round(W * d); c.height = Math.round(H * d); }
+    pctx.setTransform(d, 0, 0, d, 0, 0);
+    lctx.setTransform(d, 0, 0, d, 0, 0);
+    octx.setTransform(d, 0, 0, d, 0, 0);
     fillBg();
     if (old) {
       pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0); pctx.drawImage(old, 0, 0); pctx.restore();
@@ -307,20 +244,12 @@ rainbow_straw_blow_painting_v6_mobile.html
     flushSession();
     paintC.toBlob(blob => {
       if (!blob) { toast('儲存失敗，請改用螢幕截圖'); return; }
-      (async () => {
-        if (window.claude) {   // Claude 內嵌頁面：要透過 downloads 能力儲存
-          const dl = await claude.use('downloads');
-          if (!dl) { toast('此環境無法儲存，請改用螢幕截圖'); return; }
-          try { await dl.save({ filename: 'rainbow-blow-painting.png', data: blob }); toast('💾 作品已儲存（PNG）'); }
-          catch (e) { if (!e || e.code !== 'declined') toast('儲存失敗，請改用螢幕截圖'); }
-          return;
-        }
-        const url = URL.createObjectURL(blob), a = document.createElement('a');   // 自行架設／本機檔案：直接下載
-        a.href = url; a.download = '七彩吹畫作品.png';
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
-        toast('💾 作品已儲存（PNG）');
-      })();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = '七彩吹畫作品.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast('💾 作品已儲存（PNG）');
     }, 'image/png');
   });
 
@@ -328,35 +257,6 @@ rainbow_straw_blow_painting_v6_mobile.html
   // 全部用 Canvas 路徑繪製，不使用任何外部圖片，離線也能正常顯示。
   const tplC = document.createElement('canvas');
   const TPL_ALPHA = 0.45;   // 線稿不透明度（0.35~0.5）
-  let emotion = 'happy';
-  const EMO = {   // br：眉頭下壓(+)／上揚(−)　up：眉毛整條上提　m：嘴角(+笑 −苦；0=張嘴)　ps：瞳孔縮放
-    happy: { br: 0, up: 0, m: 1, ps: 1, tear: 0, hint: '😊 開心：用七彩顏色吹出蓬鬆、向上飛揚的頭髮／刺！' },
-    angry: { br: 16, up: 0, m: -0.5, ps: 1, tear: 0, hint: '😠 生氣：用紅色、橘色吹出又直又尖、往上豎起來！' },
-    sad: { br: -13, up: 4, m: -1, ps: 1, tear: 1, hint: '😢 難過：用藍色、靛色吹出往下垂的長髮／刺！' },
-    surprise: { br: 0, up: -16, m: 0, ps: 0.6, tear: 0, hint: '😲 驚訝：用黃色、橘色吹出爆炸般散開的頭髮／刺！' }
-  };
-
-  function drawElephant(t) {          // 大象：側面朝右、象鼻高舉，鼻尖上方留給學生吹出噴水水花
-    const fs = () => { t.fill(); t.stroke(); };
-    [-205, -125, 0, 80].forEach(x => { t.beginPath(); t.rect(x, 120, 58, 120); fs(); });                // 四隻腳
-    t.beginPath(); t.moveTo(-232, 20); t.quadraticCurveTo(-292, 60, -262, 140); t.stroke();            // 尾巴
-    t.beginPath(); t.ellipse(-40, 40, 205, 140, 0, 0, TAU); fs();                                      // 身體
-    const trunk = () => { t.beginPath(); t.moveTo(215, 30); t.bezierCurveTo(285, 70, 350, 40, 335, -40); t.bezierCurveTo(325, -95, 340, -130, 356, -165); };
-    t.lineWidth = 48.5; trunk(); t.strokeStyle = '#444'; t.stroke();                                   // 象鼻外框
-    t.lineWidth = 44; trunk(); t.strokeStyle = BG; t.stroke();                                         // 象鼻內填
-    t.strokeStyle = '#444'; t.lineWidth = 4.5;
-    t.beginPath(); t.ellipse(160, -5, 92, 98, 0, 0, TAU); fs();                                        // 頭
-    t.beginPath(); t.ellipse(105, 15, 62, 88, 0.1, 0, TAU); fs();                                      // 大耳朵
-    t.fillStyle = '#444'; t.beginPath(); t.arc(192, -28, 8, 0, TAU); t.fill();                         // 眼睛
-    t.fillStyle = BG; t.beginPath(); t.arc(195, -31, 2.8, 0, TAU); t.fill();
-    t.beginPath(); t.moveTo(214, 52); t.quadraticCurveTo(232, 66, 248, 50); t.stroke();               // 嘴
-    t.save(); t.strokeStyle = '#6fb6e6'; t.lineWidth = 3; t.setLineDash([6, 11]);                      // 噴水方向提示
-    for (let i = 0; i < 5; i++) {
-      const a = -Math.PI / 2 + (i - 2) * 0.38, c = Math.cos(a), s = Math.sin(a);
-      t.beginPath(); t.moveTo(356 + c * 30, -175 + s * 30); t.lineTo(356 + c * 150, -175 + s * 150); t.stroke();
-    }
-    t.restore();
-  }
 
   function drawHedgehog(t) {          // 小刺蝟：朝右、身體沒有刺，背上留給學生吹出彩色的刺
     const fs = () => { t.fill(); t.stroke(); };
@@ -375,11 +275,7 @@ rainbow_straw_blow_painting_v6_mobile.html
     t.beginPath(); t.arc(266, 26, 10, 0, TAU); t.fill();                                                       // 鼻子
     t.fillStyle = BG;
     t.beginPath(); t.arc(193, -11, 2.8, 0, TAU); t.fill();                                                     // 眼睛反光
-    { const E = EMO[emotion], m = E.m, oy = -32 + E.up - E.br * 0.4, iy = -32 + E.up + E.br;
-    t.beginPath();
-    if (m === 0) { t.ellipse(236, 72, 9, 13, 0, 0, TAU); fs(); } else { t.moveTo(214, 66); t.quadraticCurveTo(232, 66 + 22 * m, 250, 62); t.stroke(); }
-    t.beginPath(); t.moveTo(172, oy); t.quadraticCurveTo(190, (oy + iy) / 2 - (E.br ? 2 : 10), 208, iy); t.stroke();
-    if (E.tear) { t.beginPath(); t.ellipse(192, 30, 5, 8, 0, 0, TAU); fs(); } }                        // 嘴巴
+    t.beginPath(); t.moveTo(214, 62); t.quadraticCurveTo(232, 76, 250, 58); t.stroke();                        // 嘴巴
     t.lineWidth = 2.5;
     t.beginPath(); t.ellipse(172, 42, 14, 9, 0, 0, TAU); t.stroke();                                           // 臉頰
   }
@@ -401,21 +297,18 @@ rainbow_straw_blow_painting_v6_mobile.html
       const x = sx * 48, y = -10;
       t.lineWidth = 4.5;
       t.beginPath(); t.ellipse(x, y, 23, 31, 0, 0, TAU); fs();                                                 // 大眼睛
-      t.fillStyle = '#444'; t.beginPath(); t.ellipse(x, y + 4, 14 * EMO[emotion].ps, 21 * EMO[emotion].ps, 0, 0, TAU); t.fill();                   // 瞳孔
+      t.fillStyle = '#444'; t.beginPath(); t.ellipse(x, y + 4, 14, 21, 0, 0, TAU); t.fill();                   // 瞳孔
       t.fillStyle = BG;
       t.beginPath(); t.arc(x - 6, y - 6, 5, 0, TAU); t.fill();
       t.beginPath(); t.arc(x + 7, y + 12, 2.5, 0, TAU); t.fill();
       t.lineWidth = 5;
-      const E = EMO[emotion], oy = -58 + E.up - E.br * 0.4, iy = -58 + E.up + E.br;
-      t.beginPath(); t.moveTo(x + sx * 26, oy); t.quadraticCurveTo(x, (oy + iy) / 2 - (E.br ? 3 : 14), x - sx * 26, iy); t.stroke();
-      if (E.tear) { t.lineWidth = 3; t.beginPath(); t.ellipse(x + sx * 8, y + 46, 5, 8, 0, 0, TAU); fs(); }               // 眉毛
+      t.beginPath(); t.moveTo(x - 26, -58); t.quadraticCurveTo(x, -72, x + 26, -58); t.stroke();               // 眉毛
       t.lineWidth = 2.5;
       t.beginPath(); t.ellipse(sx * 82, 48, 16, 9, 0, 0, TAU); t.stroke();                                     // 臉頰
     });
     t.lineWidth = 4;
     t.beginPath(); t.moveTo(0, 22); t.lineTo(-5, 38); t.lineTo(5, 40); t.stroke();                             // 鼻子
-    { const m = EMO[emotion].m; t.beginPath();
-      if (m === 0) { t.ellipse(0, 88, 14, 19, 0, 0, TAU); fs(); } else { t.moveTo(-30, 80); t.quadraticCurveTo(0, 80 + 26 * m, 30, 80); t.stroke(); } }                           // 微笑
+    t.beginPath(); t.moveTo(-30, 72); t.quadraticCurveTo(0, 98, 30, 72); t.stroke();                           // 微笑
   }
 
   function drawTemplate(kind) {
@@ -424,11 +317,11 @@ rainbow_straw_blow_painting_v6_mobile.html
     const t = tplC.getContext('2d');
     t.setTransform(DPR, 0, 0, DPR, 0, 0);
     const s = Math.min(W / 700, H / 620);
-    t.translate(W / 2, H / 2 + (kind === 'hedgehog' ? 20 : kind === 'elephant' ? 50 : -25));
+    t.translate(W / 2, H / 2 + (kind === 'hedgehog' ? 20 : -25));
     t.scale(s, s);
     t.lineWidth = 4.5; t.lineJoin = 'round'; t.lineCap = 'round';
     t.strokeStyle = '#444'; t.fillStyle = BG;
-    kind === 'hedgehog' ? drawHedgehog(t) : kind === 'elephant' ? drawElephant(t) : drawPerson(t);
+    kind === 'hedgehog' ? drawHedgehog(t) : drawPerson(t);
     // 先在獨立圖層用實色畫完（遮擋才乾淨），再以半透明疊到畫紙上
     pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0);
     pctx.globalCompositeOperation = 'source-over'; pctx.globalAlpha = TPL_ALPHA;
@@ -440,16 +333,11 @@ rainbow_straw_blow_painting_v6_mobile.html
     flushSession(); tendrils.length = 0; clearLive();
     fillBg(); bgKind = kind; drawTemplate(kind);
     document.querySelectorAll('#bg-group .btn').forEach(b => b.classList.toggle('active', b.dataset.bg === kind));
-    if (kind === 'elephant') sw.children[4].click();   // 水花用藍色
-    toast(kind === 'hedgehog' ? '🦔 ' + EMO[emotion].hint : kind === 'person' ? '👤 ' + EMO[emotion].hint
-        : kind === 'elephant' ? '🐘 在象鼻尖端按住滴水，往上吹出噴水的水花！' : '⬜ 已切換為空白畫布', 4000);
+    toast(kind === 'hedgehog' ? '🦔 在刺蝟的背上按住滴水，朝外吹出彩色的刺！'
+        : kind === 'person' ? '👤 在光頭邊緣按住滴水，朝外吹出爆炸頭／長髮！'
+        : '⬜ 已切換為空白畫布');
   }
   document.querySelectorAll('#bg-group .btn').forEach(b => b.addEventListener('click', () => setBackground(b.dataset.bg)));
-  document.querySelectorAll('#emo-group .btn').forEach(b => b.addEventListener('click', () => {
-    emotion = b.dataset.emo;
-    document.querySelectorAll('#emo-group .btn').forEach(x => x.classList.toggle('active', x === b));
-    setBackground(bgKind);
-  }));
 
   // ---------------- 麥克風 / 音量（唯一的吹力來源） ----------------
   let vol = 0, micReady = false, analyser = null, buf = null, audioCtx = null;
@@ -466,12 +354,11 @@ rainbow_straw_blow_painting_v6_mobile.html
   async function startMic() {
     try {
       micStatus.textContent = '正在請求麥克風權限…';
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const resumed = audioCtx.resume();   // 與 getUserMedia 同一次點擊內呼叫（不先 await）
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
       });
-      await resumed;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
       const src = audioCtx.createMediaStreamSource(stream);
       analyser = audioCtx.createAnalyser();
       analyser.fftSize = 1024; analyser.smoothingTimeConstant = 0;
@@ -482,22 +369,10 @@ rainbow_straw_blow_painting_v6_mobile.html
       startCalibration();
     } catch (err) {
       simOn = true;
-      let emb = true; try { emb = window.self !== window.top; } catch (_) {}
-      micStatus.textContent = '⚠️ 無法使用麥克風（' + (err && err.name ? err.name : '錯誤') + '）' +
-        (emb ? '：這個頁面被放在內嵌視窗裡，系統沒有開放麥克風給它。請改用瀏覽器直接開啟（或放到自己的網站）。' : '：請到瀏覽器的網站設定允許麥克風。') +
-        '桌機可按住空白鍵模擬吹氣。';
+      micStatus.textContent = '⚠️ 無法使用麥克風（' + (err && err.name ? err.name : '錯誤') + '）。可改用「按住空白鍵」模擬吹氣（按越久越大聲）';
     }
   }
-  const onMicTap = () => { micReady ? startCalibration() : startMic(); };
-  micBtn.addEventListener('click', onMicTap);
-  micBtn.addEventListener('touchstart', e => { e.preventDefault(); onMicTap(); }, { passive: false });
-
-  function setOpen(v) { document.body.classList.toggle('open', v); $('more').classList.toggle('active', v); }
-  $('more').addEventListener('click', () => setOpen(!document.body.classList.contains('open')));
-  $('stay').addEventListener('click', () => document.body.classList.add('allowland'));
-  const mqP = matchMedia('(max-aspect-ratio: 1/1)'), sensRow = $('sens-row');
-  const placeSens = () => (mqP.matches ? $('sheet') : $('meter-panel')).appendChild(sensRow);
-  placeSens(); mqP.addEventListener('change', placeSens);
+  micBtn.addEventListener('click', () => { micReady ? startCalibration() : startMic(); });
   window.addEventListener('keydown', e => { if (e.code === 'Space') { spaceDown = true; if (simOn) e.preventDefault(); } });
   window.addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
 
@@ -533,7 +408,7 @@ rainbow_straw_blow_painting_v6_mobile.html
   // ---------------- 游標：吸管位置 + 風向箭頭方向 ----------------
   function pos(e) {
     const r = overC.getBoundingClientRect();
-    return { x: (e.clientX - r.left) / U, y: (e.clientY - r.top) / U };
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
   function makeBlob() {
     const n = 36;
@@ -547,8 +422,6 @@ rainbow_straw_blow_painting_v6_mobile.html
   }
   function down(e) {
     e.preventDefault();
-    if (document.body.classList.contains('open')) setOpen(false);
-    if (e.pointerType === 'touch') aim = -Math.PI / 2;   // 手指沒有「懸停」可指方向：預設朝上，按住後拖曳調整
     try { overC.setPointerCapture(e.pointerId); } catch (_) {}
     const p = pos(e);
     pointer.x = p.x; pointer.y = p.y; pointer.inside = true;
@@ -582,7 +455,6 @@ rainbow_straw_blow_painting_v6_mobile.html
   overC.addEventListener('pointermove', move);
   overC.addEventListener('pointerup', up);
   overC.addEventListener('pointercancel', up);
-  overC.addEventListener('contextmenu', e => e.preventDefault());   // 長按不要跳選單
   overC.addEventListener('pointerleave', () => { if (!pressed) pointer.inside = false; });
 
   // ---------------- 吸管角度（15°~90°）→ 墨水外觀 ----------------
@@ -741,7 +613,7 @@ rainbow_straw_blow_painting_v6_mobile.html
     octx.save(); octx.globalAlpha = k;
     octx.fillStyle = 'rgba(255,255,255,.5)';
     octx.beginPath(); octx.ellipse(ov.x - ov.r * 0.35, ov.y - ov.r * 0.38, ov.r * 0.2, ov.r * 0.12, -0.6, 0, TAU); octx.fill();
-    octx.fillStyle = '#555'; octx.font = 'bold ' + Math.round(13 / U) + 'px sans-serif'; octx.textAlign = 'center';
+    octx.fillStyle = '#555'; octx.font = 'bold 13px sans-serif'; octx.textAlign = 'center';
     octx.fillText((ov.power > 0 ? '💨 吹氣中　' : '') + '💧 水量 ' + Math.round(ov.water * 100) + '%', ov.x, ov.y - ov.r - 12);
     octx.restore();
     drawArrow(ov.x, ov.y, ov.ang, ov.r + 6, 62 + ov.power * 70 + Math.sin(performance.now() / 220) * 5, ov.col, k);
@@ -805,10 +677,8 @@ rainbow_straw_blow_painting_v6_mobile.html
   }
 
   resize();
-  if (matchMedia('(pointer: coarse)').matches) toast('按住畫布滴水 → 手指往要吹的方向拖曳 → 對著麥克風吹氣', 5000);
   requestAnimationFrame(frame);
 })();
 </script>
 </body>
 </html>
-目前顯示的是「rainbow_straw_blow_painting_v6_mobile.html」。
