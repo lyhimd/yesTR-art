@@ -1,934 +1,813 @@
-<!doctype html>
+
+rainbow_straw_blow_painting_v6_mobile.html
+100%
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>班級看板</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>七彩虹吸管吹畫（平板／手機直式版）</title>
 <style>
-:root {
-  --scale: 1;
-  --c-topbar: #e08a6d; --c-bg: #cddff0; --c-card: #e6f0f9; --c-primary: #c8553d;
-  --c-text: #3b3b3b; --c-muted: #6b6b6b; --c-highlight: #f1e2b6; --c-accent: #d4a017;
-  --c-good: #2e7d4f; --c-alert: #d62828; --c-remark: #efdbe6; --c-tips: #d7e6dc;
-}
-* { box-sizing: border-box; }
-html { font-size: calc(min(1vw, 1.8vh) * var(--scale)); }
-html, body { margin: 0; height: 100%; }
-body {
-  background: var(--c-bg); color: var(--c-text);
-  font-family: "Microsoft JhengHei", "微軟正黑體", "PingFang TC", "Noto Sans TC", sans-serif;
-  display: flex; flex-direction: column; overflow: hidden;
-}
-button, input, textarea, select { font: inherit; color: inherit; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; width: 100%; height: 100%; overflow: hidden;
+    background: #fcfaf2;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+    -webkit-touch-callout: none; overscroll-behavior: none;
+  }
+  #stage { position: fixed; inset: 0; isolation: isolate; background: #fcfaf2; }
+  canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  #live { mix-blend-mode: multiply; opacity: .88; pointer-events: none; }
+  #over { cursor: crosshair; touch-action: none; }
 
-/* ---------- 看板 ---------- */
-.topbar {
-  background: var(--c-topbar); min-height: 4.2rem; padding: 0.6rem 1.5rem;
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-}
-.topbar h1 { margin: 0; font-size: 2.2rem; color: #fff; font-weight: 700; letter-spacing: 0.1em; }
-.btn-fullscreen {
-  border: 2px solid rgba(255,255,255,.6); background: rgba(255,255,255,.2); color: #fff;
-  border-radius: 999px; padding: 0.4rem 1.4rem; font-size: 1.4rem; cursor: pointer;
-}
-.board {
-  flex: 1; min-height: 0; display: grid; grid-template-columns: 52fr 48fr; gap: 1.2rem; padding: 1.2rem;
-}
-.left { display: grid; grid-template-rows: auto 1fr; gap: 1.2rem; min-height: 0; }
-.card {
-  background: var(--c-card); border-radius: 1.2rem; padding: 1.1rem 1.8rem;
-  box-shadow: 0 0.2rem 0.8rem rgba(0,0,0,.08); min-height: 0;
-}
-.clock-card { text-align: center; padding-top: 0.8rem; padding-bottom: 0.9rem; }
-.date { font-size: 2.1rem; color: var(--c-muted); }
-.time {
-  font-size: 8rem; line-height: 1.05; font-weight: 700; color: var(--c-primary);
-  font-variant-numeric: tabular-nums; letter-spacing: 0.02em;
-}
-.countdown { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 0.3rem; font-size: 2.1rem; }
-.countdown-time {
-  font-size: 3rem; font-weight: 700; color: var(--c-primary); background: rgba(0,0,0,.05);
-  border-radius: 0.8rem; padding: 0.1rem 1rem; font-variant-numeric: tabular-nums;
-}
-.countdown.alert .countdown-time { color: #fff; background: var(--c-alert); animation: blink 1s ease-in-out infinite; }
-@keyframes blink { 50% { opacity: 0.55; } }
-.status {
-  display: inline-block; margin-top: 0.5rem; padding: 0.2rem 2rem; font-size: 2rem;
-  border: 2px dashed var(--c-accent); border-radius: 999px; color: var(--c-muted);
-}
-.class-card { display: flex; flex-direction: column; gap: 0.8rem; overflow: hidden; }
-.class-head {
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-  border-bottom: 2px dashed rgba(0,0,0,.15); padding-bottom: 0.8rem;
-}
-.class-name { font-size: 4rem; font-weight: 700; color: var(--c-primary); }
-.stats { display: flex; gap: 2rem; text-align: center; }
-.stat-label { font-size: 1.5rem; color: var(--c-muted); }
-.stat-value { font-size: 3.4rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
-.stat-actual .stat-value { color: var(--c-good); }
-.stat-absent .stat-value { color: var(--c-alert); }
-.remark { background: var(--c-remark); border-radius: 1rem; padding: 0.6rem 1.4rem; font-size: 1.7rem; flex-shrink: 0; max-height: 40%; overflow-y: auto; }
-.remark-title { color: var(--c-muted); margin-bottom: 0.3rem; }
-.remark-line { margin: 0.1rem 0; }
-.tips {
-  background: var(--c-tips); border-radius: 1rem; padding: 0.6rem 1.4rem; font-size: 1.9rem;
-  flex: 1; min-height: 0; overflow-y: auto;
-}
-.tips-title { color: var(--c-muted); margin-bottom: 0.3rem; }
-.tips ol { margin: 0; padding-left: 2.4rem; }
-.tips li { margin: 0.2rem 0; }
-.schedule-card { display: flex; flex-direction: column; }
-.schedule-title { font-size: 2.8rem; font-weight: 700; margin-bottom: 0.6rem; }
-.schedule-head {
-  display: grid; grid-template-columns: 1fr auto; padding: 0 1.4rem; font-size: 1.6rem; color: var(--c-muted);
-}
-.schedule-list { flex: 1; overflow-y: auto; position: relative; }
-.row {
-  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 1rem;
-  padding: 1rem 1.4rem; border-bottom: 1px dashed rgba(0,0,0,.12); border-left: 0.5rem solid transparent;
-}
-.row-time { font-family: Consolas, "Courier New", monospace; font-size: 2.6rem; font-weight: 700; }
-.row-subject { font-size: 3.6rem; font-weight: 700; color: var(--c-primary); }
-.row.active { background: var(--c-highlight); border-left-color: var(--c-accent); }
-.row.active .row-time { color: var(--c-accent); }
-.row.next { background: rgba(241,226,182,.4); }
-.row.next { background: color-mix(in srgb, var(--c-highlight) 40%, transparent); }
-.empty { font-size: 2.6rem; color: var(--c-muted); text-align: center; padding: 3rem 0; }
+  /* ---------- 左上：七彩調色盤 ---------- */
+  #palette {
+    position: absolute; top: 10px; left: 10px; z-index: 10;
+    background: rgba(255,255,255,.9); border-radius: 20px; padding: 10px 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    max-width: calc(100vw - 236px);
+  }
+  #palette h1 { font-size: 14px; margin: 0 0 8px; color: #555; }
+  #swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .swatch {
+    position: relative; width: 46px; height: 46px; border-radius: 50%;
+    border: 4px solid #fff; cursor: pointer; padding: 0;
+    box-shadow: 0 3px 8px rgba(0,0,0,.25);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .swatch::before {
+    content: ""; position: absolute; left: 10px; top: 13px; width: 5px; height: 5px;
+    background: #333; border-radius: 50%; box-shadow: 14px 0 0 #333;
+  }
+  .swatch::after {
+    content: ""; position: absolute; left: 11px; top: 21px; width: 11px; height: 6px;
+    border: 2.5px solid #333; border-top: none; border-radius: 0 0 11px 11px;
+  }
+  .swatch.dark::before { background: #fff; box-shadow: 14px 0 0 #fff; }
+  .swatch.dark::after { border-color: #fff; }
+  .swatch:active { transform: scale(.92); }
+  .swatch.active { transform: scale(1.15); box-shadow: 0 0 0 3px #444, 0 5px 12px rgba(0,0,0,.3); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    border: none; border-radius: 14px; padding: 8px 12px; font-weight: bold; font-size: 14px;
+    cursor: pointer; background: #fff; color: #444; box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  }
+  .btn:active { transform: scale(.96); }
+  .btn.active { background: #4a90e2; color: #fff; }
+  #angle-box { margin-bottom: 8px; min-width: 250px; }
+  #angle-box h1 { margin-bottom: 4px; }
+  .angle-row { display: flex; align-items: center; gap: 8px; }
+  .angle-row input { flex: 1; touch-action: none; }
+  .angle-ends { display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; font-size: 11px; color: #777; }
 
-/* ---------- 設定面板 ---------- */
-.handle {
-  position: fixed; left: 0; top: 50%; transform: translateY(-50%); z-index: 20;
-  width: 26px; height: 120px; border: 0; border-radius: 0 12px 12px 0;
-  background: rgba(0,0,0,.25); color: #fff; font-size: 20px; cursor: pointer;
-}
-.drawer {
-  position: fixed; inset: 0 auto 0 0; width: min(620px, 94vw); z-index: 30;
-  background: #fff; color: #222; font-size: 15px; box-shadow: 4px 0 24px rgba(0,0,0,.3);
-  transform: translateX(-105%); transition: transform .25s; display: flex; flex-direction: column;
-}
-.drawer.open { transform: none; }
-.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid #ddd; }
-.drawer-head h2 { margin: 0; font-size: 18px; }
-.tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 16px; border-bottom: 1px solid #ddd; }
-.tab { border: 1px solid #ccc; background: #f5f5f5; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
-.tab.on { background: #333; color: #fff; border-color: #333; }
-.panel { flex: 1; overflow-y: auto; padding: 16px; }
-.panel h3 { font-size: 16px; margin: 18px 0 8px; }
-.panel h3:first-child { margin-top: 0; }
-.panel label { display: block; margin: 8px 0 4px; font-weight: 600; }
-.panel input[type=text], .panel input[type=number], .panel input[type=date], .panel input[type=password], .panel textarea, .panel select {
-  width: 100%; padding: 6px 8px; border: 1px solid #bbb; border-radius: 6px; background: #fff;
-}
-.panel textarea { min-height: 140px; resize: vertical; }
-.panel table { width: 100%; border-collapse: collapse; }
-.panel td, .panel th { padding: 3px; text-align: left; }
-.panel td input { width: 100%; padding: 4px; border: 1px solid #bbb; border-radius: 4px; }
-.panel .narrow { width: 4.5em; }
-.hint { color: #777; font-size: 13px; margin: 4px 0; }
-.btn { border: 1px solid #999; background: #f5f5f5; border-radius: 6px; padding: 5px 12px; cursor: pointer; margin: 4px 4px 4px 0; }
-.btn.primary { background: #333; color: #fff; border-color: #333; }
-.btn.danger { color: #b00; border-color: #b00; }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
-.chip { border: 1px solid #999; border-radius: 999px; padding: 4px 12px; cursor: pointer; background: #fff; }
-.chip.absent { background: #fde2e2; border-color: #d62828; color: #b00; }
-.chip.pulled { background: #fff3cd; border-color: #d4a017; color: #8a6500; }
-.color-grid { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; }
-.color-grid input[type=color] { width: 56px; height: 30px; border: 1px solid #bbb; padding: 0; }
-.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 40; display: flex; align-items: center; justify-content: center; }
-.modal { background: #fff; color: #222; padding: 20px 24px; border-radius: 12px; width: min(320px, 90vw); font-size: 16px; }
-.modal input { width: 100%; font-size: 24px; letter-spacing: .4em; text-align: center; padding: 6px; margin: 10px 0; }
-.err { color: #b00; min-height: 1.2em; }
+  /* ---------- 右上：吹力偵測 ---------- */
+  #meter-panel {
+    position: absolute; top: 10px; right: 10px; z-index: 10; width: 214px;
+    background: rgba(255,255,255,.9); border-radius: 18px; padding: 10px 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  }
+  #meter-title { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #555; margin-bottom: 6px; }
+  #meter-track { position: relative; height: 22px; background: #e6e6e6; border: 2px solid #d5d5d5; border-radius: 11px; overflow: hidden; }
+  #meter-fill { height: 100%; width: 0; background: linear-gradient(90deg,#7fd8a4,#a3e7c0); border-radius: 11px 0 0 11px; }
+  #meter-fill.blowing { background: linear-gradient(90deg,#ff9a3c,#ff4d4d); }
+  #threshold-mark { position: absolute; top: 0; bottom: 0; left: 25%; width: 2px; background: #444; z-index: 1; }
+  #mic-status { margin-top: 6px; font-size: 12px; color: #777; text-align: center; line-height: 1.4; }
+  #mic-btn {
+    margin-top: 6px; width: 100%; padding: 8px; border: none; border-radius: 10px;
+    background: #4a90e2; color: #fff; font-weight: bold; font-size: 13px; cursor: pointer;
+  }
+  #sens-row { margin-top: 8px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
+  #sens-row input { flex: 1; }
+
+  #hint {
+    position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 10;
+    background: rgba(255,255,255,.88); border-radius: 18px; padding: 8px 16px;
+    font-size: 13px; color: #666; text-align: center; max-width: 92vw;
+    box-shadow: 0 2px 6px rgba(0,0,0,.1);
+  }
+  #toast {
+    position: absolute; left: 50%; bottom: 70px; transform: translateX(-50%); z-index: 20;
+    background: rgba(50,50,50,.88); color: #fff; padding: 8px 16px; border-radius: 16px;
+    font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+  /* ---------- 平板／手機：直式版面 ---------- */
+  #more { display: none; }
+  #rotate {
+    display: none; position: fixed; inset: 0; z-index: 100; background: #fcfaf2;
+    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    text-align: center; padding: 24px; font-size: 20px; line-height: 1.6; color: #444;
+  }
+  #rotate b { font-size: 64px; }
+  @media (orientation: landscape) and (pointer: coarse) {
+    body:not(.allowland) #rotate { display: flex; }
+  }
+  @media (max-aspect-ratio: 1/1) {
+    :root { --mh: 54px; --ph: 92px; }
+    #stage { inset: calc(var(--mh) + var(--ph)) 0 0 0; }
+    #hint { display: none; }
+
+    /* 最上方：吹力偵測條 */
+    #meter-panel {
+      position: fixed; top: 0; left: 0; right: 0; width: auto; border-radius: 0 0 16px 16px;
+      padding: 6px 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; z-index: 12;
+    }
+    #meter-title { margin: 0; gap: 8px; white-space: nowrap; }
+    #meter-track { flex: 1; min-width: 100px; }
+    #mic-status { flex: 1 1 55%; margin: 0; text-align: left; font-size: 11px; }
+    #mic-btn { margin: 0; width: auto; padding: 7px 12px; }
+    #sheet #sens-row { margin: 8px 0 0; }
+
+    /* 其下：調色盤與按鈕（可展開設定） */
+    #palette {
+      position: fixed; top: var(--mh); left: 0; right: 0; max-width: none; border-radius: 0 0 18px 18px;
+      padding: 8px 10px; max-height: 62vh; overflow-y: auto; z-index: 11;
+    }
+    #palette > h1 { display: none; }
+    #swatches { flex-wrap: nowrap; justify-content: space-between; gap: 0; margin-bottom: 8px; }
+    .swatch { zoom: .72; }
+    #palette .actions { flex-wrap: nowrap; }
+    #palette .btn { flex: 1 1 auto; padding: 7px 6px; font-size: 13px; }
+    #sheet { display: none; }
+    body.open #sheet { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 13; max-height: 48vh; overflow-y: auto;
+      background: rgba(255,255,255,.97); border-radius: 18px 18px 0 0; padding: 12px; box-shadow: 0 -4px 14px rgba(0,0,0,.2); }
+    #sheet #angle-box { min-width: 0; }
+    #more { display: inline-block; }
+    input[type=range] { height: 30px; }
+  }
 </style>
 </head>
 <body>
-<header class="topbar">
-  <h1 id="title"></h1>
-  <button class="btn-fullscreen" id="btnFullscreen"></button>
-</header>
-<main class="board">
-  <section class="left">
-    <div class="card clock-card">
-      <div class="date" id="date"></div>
-      <div class="time" id="time"></div>
-      <div class="countdown" id="countdown">
-        <span id="countdownLabel"></span><span class="countdown-time" id="countdownTime"></span>
-      </div>
-      <div class="status" id="status"></div>
+<div id="stage">
+  <canvas id="paint"></canvas>
+  <canvas id="live"></canvas>
+  <canvas id="over"></canvas>
+
+  <div id="palette">
+    <h1>🌈 七彩調色盤</h1>
+    <div id="swatches"></div>
+    <h1>🖼️ 畫布背景選擇</h1>
+    <div id="sheet">
+    <div class="actions" id="bg-group" style="margin-bottom:8px">
+      <button class="btn active" data-bg="blank">⬜ 空白畫布</button>
+      <button class="btn" data-bg="hedgehog">🦔 小刺蝟</button>
+      <button class="btn" data-bg="person">👤 百變髮型人物</button>
+      <button class="btn" data-bg="elephant">🐘 大象噴水</button>
     </div>
-    <div class="card class-card">
-      <div class="class-head">
-        <div class="class-name" id="className"></div>
-        <div class="stats">
-          <div><div class="stat-label" id="lblExpected"></div><div class="stat-value" id="numExpected"></div></div>
-          <div class="stat-actual"><div class="stat-label" id="lblActual"></div><div class="stat-value" id="numActual"></div></div>
-          <div class="stat-absent"><div class="stat-label" id="lblAbsent"></div><div class="stat-value" id="numAbsent"></div></div>
-          <div><div class="stat-label" id="lblPulled"></div><div class="stat-value" id="numPulled"></div></div>
-        </div>
-      </div>
-      <div class="remark" id="remark"></div>
-      <div class="tips" id="tips"></div>
+    <div class="actions" id="emo-group" style="margin-bottom:8px">
+      <button class="btn active" data-emo="happy">😊 開心</button>
+      <button class="btn" data-emo="angry">😠 生氣</button>
+      <button class="btn" data-emo="sad">😢 難過</button>
+      <button class="btn" data-emo="surprise">😲 驚訝</button>
     </div>
-  </section>
-  <section class="card schedule-card">
-    <div class="schedule-title" id="scheduleTitle"></div>
-    <div class="schedule-head" id="scheduleHead"><span id="lblTime"></span><span id="lblSubject"></span></div>
-    <div class="schedule-list" id="scheduleList"></div>
-  </section>
-</main>
+    <div id="angle-box">
+      <h1>📐 吸管角度調整　<b id="angle-val">45°</b></h1>
+      <div class="angle-row">
+        <svg width="46" height="30" viewBox="0 0 46 30" aria-hidden="true">
+          <line x1="2" y1="26" x2="44" y2="26" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+          <line id="straw-line" x1="10" y1="26" x2="30" y2="10" stroke="#4a90e2" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <input type="range" id="angle" min="15" max="90" step="1" value="45">
+      </div>
+      <div class="angle-ends"><span>🌊 低角度（大面積粗墨）</span><span>🌿 高角度（細緻樹枝）</span></div>
+    </div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="clear">🔄 清除重來</button>
+      <button class="btn" id="save">💾 儲存作品</button>
+      <button class="btn" id="more">⚙️ 設定</button>
+    </div>
+  </div>
 
-<button class="handle" id="handle" title="設定">›</button>
-<aside class="drawer" id="drawer">
-  <div class="drawer-head"><h2>看板設定</h2><button class="btn" id="btnClose">關閉 ✕</button></div>
-  <nav class="tabs" id="tabs"></nav>
-  <div class="panel" id="panel"></div>
-</aside>
+  <div id="meter-panel">
+    <div id="meter-title"><span>🎤 吹力偵測</span><span id="meter-val">0</span></div>
+    <div id="meter-track"><div id="threshold-mark"></div><div id="meter-fill"></div></div>
+    <div id="mic-status">尚未啟用麥克風</div>
+    <button id="mic-btn">▶️ 開啟麥克風</button>
+    <div id="sens-row"><span>靈敏度</span><input type="range" id="sens" min="1" max="10" step="1" value="5"></div>
+  </div>
 
-<script id="board-logic">
-// 看板核心邏輯：純函式，不碰 DOM、不讀 localStorage、不自己取時間。
-var BoardLogic = (function () {
-  var THEME_PRESETS = {
-    warm: { name: '暖橘', colors: {
-      topbar: '#e08a6d', bg: '#cddff0', card: '#e6f0f9', primary: '#c8553d',
-      text: '#3b3b3b', muted: '#6b6b6b', highlight: '#f1e2b6', accent: '#d4a017',
-      good: '#2e7d4f', alert: '#d62828', remark: '#efdbe6', tips: '#d7e6dc' } },
-    blue: { name: '清爽藍', colors: {
-      topbar: '#4a90c2', bg: '#e8f1f8', card: '#ffffff', primary: '#1f5f8b',
-      text: '#22313f', muted: '#5f7385', highlight: '#d5ebfa', accent: '#2a9df4',
-      good: '#2e7d4f', alert: '#d62828', remark: '#eef2f7', tips: '#e6f4ea' } },
-    dark: { name: '深色', colors: {
-      topbar: '#2c3440', bg: '#14181e', card: '#1f262f', primary: '#ffb36b',
-      text: '#e8e8e8', muted: '#9aa4ae', highlight: '#3a3320', accent: '#ffcf5c',
-      good: '#6fd49a', alert: '#ff6b6b', remark: '#2b2430', tips: '#1f2e26' } },
-  };
-
-  function defaultSettings() {
-    return {
-      version: 1,
-      title: '',
-      className: '9年04班',
-      examDays: {},
-      bellSchedule: [
-        { start: '07:40', end: '08:10' }, { start: '08:15', end: '09:00' },
-        { start: '09:10', end: '09:55' }, { start: '10:05', end: '10:50' },
-        { start: '11:00', end: '11:45' }, { start: '12:30', end: '13:10', emoji: '😴' },
-        { start: '13:20', end: '14:05' }, { start: '14:15', end: '15:00' },
-        { start: '15:15', end: '16:00' },
-      ],
-      weekly: {
-        1: ['早自習', '', '', '', '', '午休', '', '', ''],
-        2: ['早自習', '', '', '', '', '午休', '', '', ''],
-        3: ['早自習', '', '', '', '', '午休', '', '', ''],
-        4: ['早自習', '', '', '', '', '午休', '', '', ''],
-        5: ['早自習', '', '', '', '', '午休', '', '', ''],
-      },
-      roster: '',
-      attendance: { date: '', marks: {} },
-      tips: '鐘響前請收妥書本\n記得寫上班級、姓名、座號\n考試結束請立即停筆',
-      alertMinutes: 5,
-      defaultEmoji: '✏️',
-      fontScale: 1,
-      pin: '',
-      theme: { preset: 'warm', colors: Object.assign({}, THEME_PRESETS.warm.colors) },
-      labels: {
-        scheduleTime: '時間',
-        scheduleSubject: '科目',
-        status: '目前狀態',
-        expected: '應到',
-        actual: '實到',
-        absent: '未到',
-        pulled: '抽離',
-        remarkTitle: '備註 (缺席與抽離名單)',
-        absentStudents: '未到學生',
-        pulledStudents: '抽離學生',
-        allPresent: '全員到齊',
-        tipsTitle: '導師小叮嚀',
-        fullscreen: '全螢幕',
-        exitFullscreen: '退出全螢幕',
-        countdownEnd: '【{subject}】結束倒數',
-        countdownNext: '距離下一節【{subject}】開始',
-        break: '下課',
-        notStarted: '尚未開始',
-        examEnded: '今日考程結束',
-        dailyEnded: '今日課程結束',
-        examTitle: '今日考程表',
-        dailyTitle: '今日課表',
-        noneTitle: '今日無課程',
-      },
-    };
-  }
-
-  function pad2(n) { return String(n).padStart(2, '0'); }
-
-  function dateKey(d) {
-    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
-  }
-
-  function toMinutes(hhmm) {
-    var p = String(hhmm).split(':');
-    return Number(p[0]) * 60 + Number(p[1]);
-  }
-
-  function formatDuration(totalSeconds) {
-    var h = Math.floor(totalSeconds / 3600);
-    var m = Math.floor((totalSeconds % 3600) / 60);
-    var s = totalSeconds % 60;
-    return h > 0 ? h + ':' + pad2(m) + ':' + pad2(s) : pad2(m) + ':' + pad2(s);
-  }
-
-  function fill(template, subject) {
-    return String(template).replace(/\{subject\}/g, subject);
-  }
-
-  function computeBoardState(settings, now) {
-    var labels = settings.labels;
-    var schedule = resolveSchedule(settings, now);
-    var rows = schedule.rows.slice().sort(function (a, b) {
-      return toMinutes(a.start) - toMinutes(b.start);
-    });
-    var midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    var msOfDay = now - midnight;
-    var state = {
-      mode: schedule.mode,
-      title: labels[schedule.mode + 'Title'],
-      rows: rows, activeIndex: -1, nextIndex: -1, phase: 'none', countdown: null,
-      attendance: summarizeAttendance(settings),
-      tips: splitLines(settings.tips),
-    };
-    if (schedule.mode === 'none') {
-      state.statusText = labels.noneTitle;
-      return state;
-    }
-
-    function countdownTo(targetMs, template, subject) {
-      var seconds = Math.floor((targetMs - msOfDay) / 1000);
-      return {
-        seconds: seconds,
-        text: formatDuration(seconds),
-        label: fill(template, subject),
-        alert: seconds <= settings.alertMinutes * 60,
-      };
-    }
-
-    for (var i = 0; i < rows.length; i++) {
-      var startMs = toMinutes(rows[i].start) * 60000;
-      var endMs = toMinutes(rows[i].end) * 60000;
-      if (msOfDay >= startMs && msOfDay < endMs) {
-        state.phase = 'in-period';
-        state.activeIndex = i;
-        state.statusText = rows[i].subject;
-        state.statusEmoji = rows[i].emoji || settings.defaultEmoji;
-        state.countdown = countdownTo(endMs, labels.countdownEnd, rows[i].subject);
-        return state;
-      }
-      if (msOfDay < startMs) {
-        state.phase = i === 0 ? 'before' : 'break';
-        state.nextIndex = i;
-        state.statusText = i === 0 ? labels.notStarted : labels.break;
-        state.countdown = countdownTo(startMs, labels.countdownNext, rows[i].subject);
-        return state;
-      }
-    }
-    state.phase = 'after';
-    state.statusText = schedule.mode === 'exam' ? labels.examEnded : labels.dailyEnded;
-    return state;
-  }
-
-  function splitLines(text) {
-    return String(text || '').split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
-  }
-
-  // 一行一位；行首的數字視為座號（「7」「7號」都顯示成「7號」）。
-  // 沒有座號時看板只顯示「姓XX」保護隱私；同姓會撞名，所以出缺席改用整行當 key。
-  function parseRoster(text) {
-    return splitLines(text).map(function (line) {
-      var m = line.match(/^(\d+)\s*號?/);
-      if (m) return { line: line, key: m[1] + '號', seat: m[1] + '號' };
-      return { line: line, key: line, seat: Array.from(line)[0] + 'XX' };
-    });
-  }
-
-  function summarizeAttendance(settings) {
-    var marks = settings.attendance.marks;
-    var students = parseRoster(settings.roster);
-    var absentSeats = [], pulledSeats = [];
-    students.forEach(function (st) {
-      if (marks[st.key] === 'absent') absentSeats.push(st.seat);
-      if (marks[st.key] === 'pulled') pulledSeats.push(st.seat);
-    });
-    return {
-      expected: students.length,
-      absent: absentSeats.length,
-      pulled: pulledSeats.length,
-      actual: students.length - absentSeats.length - pulledSeats.length,
-      absentSeats: absentSeats,
-      pulledSeats: pulledSeats,
-    };
-  }
-
-  // 日期與出缺席記錄日期不同時，回傳全部重設為「到」的新設定；同一天回傳 null。
-  function applyDailyReset(settings, now) {
-    var today = dateKey(now);
-    if (settings.attendance.date === today) return null;
-    var next = JSON.parse(JSON.stringify(settings));
-    next.attendance = { date: today, marks: {} };
-    return next;
-  }
-
-  var TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
-  var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
-  function isPlainObject(v) { return v !== null && typeof v === 'object' && !Array.isArray(v); }
-
-  function allStrings(v, mustBeArray) {
-    if (mustBeArray && !Array.isArray(v)) return false;
-    return Object.keys(v).every(function (k) { return typeof v[k] === 'string'; });
-  }
-
-  function checkRows(rows, where, needSubject, checkOrder) {
-    if (!Array.isArray(rows)) return where + ' 必須是清單';
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      if (!isPlainObject(r)) return where + ' 第 ' + (i + 1) + ' 列格式錯誤';
-      if (!TIME_RE.test(r.start) || !TIME_RE.test(r.end)) return where + ' 第 ' + (i + 1) + ' 列時間必須是 HH:MM';
-      if (checkOrder && toMinutes(r.end) <= toMinutes(r.start)) return where + ' 第 ' + (i + 1) + ' 列結束時間必須晚於開始時間';
-      if (needSubject && typeof r.subject !== 'string') return where + ' 第 ' + (i + 1) + ' 列缺少科目';
-    }
-    return null;
-  }
-
-  // 驗證並以預設值補齊設定物件（匯入與讀取 localStorage 共用）。
-  // checkOrder 只在匯入時開啟：編輯途中暫時「結束早於開始」的資料仍要能讀回，不能整份作廢。
-  function normalizeSettings(raw, checkOrder) {
-    if (!isPlainObject(raw)) return { ok: false, error: '設定檔內容必須是物件' };
-    if (typeof raw.version !== 'number') return { ok: false, error: '設定檔缺少 version 欄位' };
-    var d = defaultSettings();
-    var err;
-    ['title', 'className', 'roster', 'tips', 'defaultEmoji', 'pin'].forEach(function (k) {
-      if (k in raw && typeof raw[k] !== 'string') err = err || (k + ' 必須是文字');
-    });
-    ['alertMinutes', 'fontScale'].forEach(function (k) {
-      if (k in raw && typeof raw[k] !== 'number') err = err || (k + ' 必須是數字');
-    });
-    if ('pin' in raw && !/^(\d{4})?$/.test(raw.pin)) err = err || 'PIN 碼必須是 4 位數字或留空';
-    if (isPlainObject(raw.weekly)) Object.keys(raw.weekly).forEach(function (day) {
-      if (!allStrings(raw.weekly[day], true)) err = err || ('週課表（' + day + '）必須是科目文字清單');
-    });
-    if (isPlainObject(raw.labels) && !allStrings(raw.labels)) err = err || '介面文字必須都是文字';
-    if (isPlainObject(raw.theme) && 'colors' in raw.theme &&
-        !(isPlainObject(raw.theme.colors) && allStrings(raw.theme.colors))) err = err || '顏色設定格式錯誤';
-    if ('examDays' in raw) {
-      if (!isPlainObject(raw.examDays)) err = err || 'examDays 格式錯誤';
-      else Object.keys(raw.examDays).forEach(function (date) {
-        if (!DATE_RE.test(date)) err = err || ('考程表日期「' + date + '」必須是 YYYY-MM-DD');
-        else err = err || checkRows(raw.examDays[date], '考程表 ' + date, true, checkOrder);
-      });
-    }
-    if ('bellSchedule' in raw) err = err || checkRows(raw.bellSchedule, '節次時間表', false, checkOrder);
-    if ('weekly' in raw && !isPlainObject(raw.weekly)) err = err || 'weekly 格式錯誤';
-    ['labels', 'theme', 'attendance'].forEach(function (k) {
-      if (k in raw && !isPlainObject(raw[k])) err = err || (k + ' 格式錯誤');
-    });
-    if (err) return { ok: false, error: err };
-
-    var s = Object.assign(d, JSON.parse(JSON.stringify(raw)));
-    s.labels = Object.assign(defaultSettings().labels, raw.labels);
-    var theme = raw.theme || {};
-    s.theme = {
-      preset: theme.preset || d.theme.preset,
-      colors: Object.assign({}, defaultSettings().theme.colors, theme.colors),
-    };
-    s.weekly = Object.assign(defaultSettings().weekly, raw.weekly);
-    s.attendance = {
-      date: (raw.attendance && raw.attendance.date) || '',
-      marks: (raw.attendance && isPlainObject(raw.attendance.marks)) ? raw.attendance.marks : {},
-    };
-    Object.keys(s.examDays).forEach(function (date) {
-      s.examDays[date] = s.examDays[date].map(function (r) {
-        return { start: r.start, end: r.end, subject: r.subject, emoji: r.emoji || '' };
-      });
-    });
-    return { ok: true, settings: s };
-  }
-
-  function importSettings(text) {
-    var raw;
-    try { raw = JSON.parse(text); } catch (e) { return { ok: false, error: '不是有效的設定檔（JSON 格式錯誤）' }; }
-    return normalizeSettings(raw, true);
-  }
-
-  // 指定日期考程表優先；否則週一～週五依週課表（共用節次時間，空白科目略過）。
-  function resolveSchedule(settings, now) {
-    var exam = settings.examDays[dateKey(now)];
-    if (exam && exam.length) return { mode: 'exam', rows: exam };
-    var subjects = settings.weekly[now.getDay()] || [];
-    var rows = [];
-    settings.bellSchedule.forEach(function (bell, i) {
-      var subject = (subjects[i] || '').trim();
-      if (subject) rows.push({ start: bell.start, end: bell.end, subject: subject, emoji: bell.emoji || '' });
-    });
-    if (rows.length) return { mode: 'daily', rows: rows };
-    return { mode: 'none', rows: [] };
-  }
-
-  return {
-    defaultSettings: defaultSettings,
-    computeBoardState: computeBoardState,
-    parseRoster: parseRoster,
-    applyDailyReset: applyDailyReset,
-    normalizeSettings: normalizeSettings,
-    importSettings: importSettings,
-    dateKey: dateKey,
-    THEME_PRESETS: THEME_PRESETS,
-  };
-})();
-</script>
+  <div id="hint">① 選顏色　② 移動滑鼠，箭頭會指向方向　③ 按住不放，水滴越變越大　④ 對麥克風吹氣，水痕順箭頭衝出去（按住時拖曳可調整方向）　⑤ 調「吸管角度」改變墨水的粗細與形狀</div>
+  <div id="toast"></div>
+</div>
+<div id="rotate"><b>📱↻</b><div>請把平板／手機轉成<strong>直式</strong><br>畫布才夠大，麥克風也在方便吹氣的位置</div><button class="btn" id="stay">仍要橫式使用</button></div>
 
 <script>
-// 看板畫面與設定面板：讀寫 localStorage、每秒依 computeBoardState 的結果渲染。
-(function () {
-  var L = BoardLogic;
-  var STORAGE_KEY = 'classBoard.settings.v1';
-  var WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六'];
-  var PHASE_EMOJI = { before: '⏳', break: '🔔', after: '✅', none: '🏠' };
-  var MARK_CYCLE = { undefined: 'absent', absent: 'pulled', pulled: undefined };
-  var DEMO_EXAM = [
-    ['08:15', '08:45', '自習', '☕'], ['08:45', '09:55', '社會', ''], ['10:05', '10:25', '自習', '☕'],
-    ['10:25', '11:45', '數學', ''], ['12:45', '13:20', '午休', '😴'], ['13:20', '13:50', '自習', '☕'],
-    ['13:50', '15:00', '國文', ''], ['15:10', '16:00', '作文', ''],
-  ].map(function (r) { return { start: r[0], end: r[1], subject: r[2], emoji: r[3] }; });
+(() => {
+  'use strict';
 
-  var LABEL_NAMES = [
-    ['examTitle', '課表標題（考試日）'], ['dailyTitle', '課表標題（平常日）'], ['noneTitle', '無課程時的文字'],
-    ['scheduleTime', '課表欄位：時間'], ['scheduleSubject', '課表欄位：科目'],
-    ['countdownEnd', '上課中倒數'], ['countdownNext', '空檔倒數'],
-    ['status', '目前狀態'], ['break', '下課時的狀態'], ['notStarted', '第一節前的狀態'],
-    ['examEnded', '考試日最後一節後'], ['dailyEnded', '平常日最後一節後'],
-    ['expected', '應到'], ['actual', '實到'], ['absent', '未到'], ['pulled', '抽離'],
-    ['remarkTitle', '備註標題'], ['absentStudents', '未到學生'], ['pulledStudents', '抽離學生'], ['allPresent', '全員到齊'],
-    ['tipsTitle', '導師小叮嚀標題'], ['fullscreen', '全螢幕按鈕'], ['exitFullscreen', '退出全螢幕按鈕'],
+  const COLORS = [
+    { n: '紅', c: '#ff4d4d' }, { n: '橙', c: '#ff944d' }, { n: '黃', c: '#ffee4d' },
+    { n: '綠', c: '#4dff4d' }, { n: '藍', c: '#4d94ff' }, { n: '靛', c: '#4d4dff' },
+    { n: '紫', c: '#b54dff' },
+    { n: '🤎 咖啡色', c: '#8b5a2b', dark: true }, { n: '🖤 黑色', c: '#1a1a1a', dark: true }
   ];
-  var COLOR_NAMES = [
-    ['topbar', '頂部橫條'], ['bg', '背景'], ['card', '卡片底色'], ['primary', '主色（時鐘、班名、科目）'],
-    ['text', '文字'], ['muted', '次要文字'], ['highlight', '目前節次高亮'], ['accent', '高亮邊條／狀態框'],
-    ['good', '實到數字'], ['alert', '倒數提醒／未到數字'], ['remark', '備註區底色'], ['tips', '小叮嚀底色'],
-  ];
+  const BG = '#fcfaf2';
+  const THRESH = 25;          // 吹氣門檻（音量 > 25）
+  const LAYER_ALPHA = 0.88;   // 水彩半透明度（live 層 CSS opacity 與合成時一致）
+  const MAXR = 56;            // 水滴最大半徑
+  const TAU = Math.PI * 2;
 
-  // 新的一節接在上一節後面，預設 45 分鐘
-  function nextPeriod(rows) {
-    var last = rows[rows.length - 1];
-    var start = last ? last.end : '08:00';
-    var m = Math.min(Number(start.slice(0, 2)) * 60 + Number(start.slice(3)) + 45, 23 * 60 + 59);
-    return { start: start, end: String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'), emoji: '' };
-  }
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), paintC = $('paint'), liveC = $('live'), overC = $('over');
+  const pctx = paintC.getContext('2d'), lctx = liveC.getContext('2d'), octx = overC.getContext('2d');
+  let W = 0, H = 0, DPR = 1, U = 1, sizeKey = '';
 
-  var settings = load();
-  var currentTab = 'exam';
-  var editingDate = L.dateKey(new Date());
-  var lastScheduleSig = '';
-  var lastActive = null;
+  let colorIdx = 0, pressed = false, session = null, layerDirty = false, aim = -0.6;
+  const tendrils = [];
+  let bgKind = 'blank';
+  const pointer = { x: 0, y: 0, inside: false };
+  const lastMove = { x: 0, y: 0, has: false };
 
-  function $(id) { return document.getElementById(id); }
-  function el(tag, attrs, children) {
-    var e = document.createElement(tag);
-    Object.keys(attrs || {}).forEach(function (k) {
-      if (k === 'text') e.textContent = attrs[k];
-      else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), attrs[k]);
-      else if (k === 'class') e.className = attrs[k];
-      else e.setAttribute(k, attrs[k]);
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const wrapPi = a => { while (a > Math.PI) a -= TAU; while (a < -Math.PI) a += TAU; return a; };
+  const lerpAngle = (a, b, t) => a + wrapPi(b - a) * t;
+
+  // ---------------- 調色盤 ----------------
+  const sw = $('swatches');
+  COLORS.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'swatch' + (i === 0 ? ' active' : '') + (c.dark ? ' dark' : '');
+    b.style.background = c.c; b.title = c.n; b.setAttribute('aria-label', c.n);
+    b.addEventListener('click', () => {
+      colorIdx = i;
+      [...sw.children].forEach((x, j) => x.classList.toggle('active', j === i));
     });
-    (children || []).forEach(function (c) { if (c) e.appendChild(c); });
-    return e;
-  }
-
-  function load() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        var r = L.normalizeSettings(JSON.parse(raw));
-        if (r.ok) return r.settings;
-      }
-    } catch (e) { /* 無法讀取時使用預設值 */ }
-    return L.defaultSettings();
-  }
-
-  function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch (e) { /* 無法保存時仍可顯示 */ }
-  }
-
-  function commit() { save(); applyAppearance(); lastScheduleSig = ''; render(); }
-
-  // ---------- 看板渲染 ----------
-  function applyAppearance() {
-    var root = document.documentElement.style;
-    Object.keys(settings.theme.colors).forEach(function (k) { root.setProperty('--c-' + k, settings.theme.colors[k]); });
-    root.setProperty('--scale', settings.fontScale);
-  }
-
-  function render() {
-    var now = new Date();
-    var reset = L.applyDailyReset(settings, now);
-    // 只換掉出缺席，設定面板裡的編輯器仍指向同一個 settings 物件
-    if (reset) { settings.attendance = reset.attendance; save(); }
-    var st = L.computeBoardState(settings, now);
-    var lb = settings.labels;
-
-    $('title').textContent = settings.title;
-    $('btnFullscreen').textContent = '⛶ ' + (document.fullscreenElement ? lb.exitFullscreen : lb.fullscreen);
-    $('date').textContent = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日 星期' + WEEKDAYS[now.getDay()];
-    $('time').textContent = [now.getHours(), now.getMinutes(), now.getSeconds()]
-      .map(function (n) { return String(n).padStart(2, '0'); }).join(':');
-
-    var cd = $('countdown');
-    cd.style.visibility = st.countdown ? 'visible' : 'hidden';
-    if (st.countdown) {
-      $('countdownLabel').textContent = st.countdown.label;
-      $('countdownTime').textContent = st.countdown.text;
-      cd.classList.toggle('alert', st.countdown.alert);
-    }
-    var emoji = st.phase === 'in-period' ? st.statusEmoji : PHASE_EMOJI[st.phase];
-    $('status').textContent = emoji + ' ' + lb.status + '：' + st.statusText;
-
-    $('className').textContent = settings.className;
-    $('lblExpected').textContent = lb.expected; $('numExpected').textContent = st.attendance.expected;
-    $('lblActual').textContent = lb.actual; $('numActual').textContent = st.attendance.actual;
-    $('lblAbsent').textContent = lb.absent; $('numAbsent').textContent = st.attendance.absent;
-    $('lblPulled').textContent = lb.pulled; $('numPulled').textContent = st.attendance.pulled;
-    renderRemark(st.attendance, lb);
-    renderTips(st.tips, lb);
-    renderSchedule(st, lb);
-  }
-
-  function renderRemark(a, lb) {
-    var box = $('remark');
-    box.replaceChildren(el('div', { class: 'remark-title', text: '📝 ' + lb.remarkTitle }));
-    if (a.absentSeats.length) box.appendChild(el('div', { class: 'remark-line', text: '❌ ' + lb.absentStudents + '：' + a.absentSeats.join('、') }));
-    if (a.pulledSeats.length) box.appendChild(el('div', { class: 'remark-line', text: '↗️ ' + lb.pulledStudents + '：' + a.pulledSeats.join('、') }));
-    if (a.expected && !a.absentSeats.length && !a.pulledSeats.length) box.appendChild(el('div', { class: 'remark-line', text: '✅ ' + lb.allPresent }));
-  }
-
-  function renderTips(tips, lb) {
-    var sig = JSON.stringify([tips, lb.tipsTitle]);
-    var box = $('tips');
-    if (box.dataset.sig === sig) return; // 避免每秒重建而打斷捲動
-    box.dataset.sig = sig;
-    box.replaceChildren(
-      el('div', { class: 'tips-title', text: '💌 ' + lb.tipsTitle }),
-      el('ol', {}, tips.map(function (t) { return el('li', { text: t }); }))
-    );
-  }
-
-  function renderSchedule(st, lb) {
-    $('scheduleTitle').textContent = '🌻 ' + st.title;
-    $('lblTime').textContent = lb.scheduleTime;
-    $('lblSubject').textContent = lb.scheduleSubject;
-    $('scheduleHead').style.display = st.rows.length ? '' : 'none';
-    var sig = JSON.stringify([st.rows, st.activeIndex, st.nextIndex, st.title]);
-    if (sig === lastScheduleSig) return;
-    lastScheduleSig = sig;
-    var list = $('scheduleList');
-    if (!st.rows.length) {
-      list.replaceChildren(el('div', { class: 'empty', text: lb.noneTitle }));
-      return;
-    }
-    list.replaceChildren.apply(list, st.rows.map(function (r, i) {
-      var cls = 'row' + (i === st.activeIndex ? ' active' : '') + (i === st.nextIndex ? ' next' : '');
-      return el('div', { class: cls }, [
-        el('div', { class: 'row-time', text: r.start + ' - ' + r.end }),
-        el('div', { class: 'row-subject', text: r.subject }),
-      ]);
-    }));
-    var focus = st.activeIndex >= 0 ? st.activeIndex : st.nextIndex;
-    if (focus !== lastActive) {
-      lastActive = focus;
-      var target = list.children[Math.max(focus, 0)];
-      if (target) list.scrollTop = target.offsetTop;
-    }
-  }
-
-  // ---------- 全螢幕 ----------
-  $('btnFullscreen').addEventListener('click', function () {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else document.documentElement.requestFullscreen().catch(function () {});
+    sw.appendChild(b);
   });
-  document.addEventListener('fullscreenchange', realign);
 
-  // 字型載入或視窗大小改變後列高會變，重新把目前這一節捲到頂端
-  function realign() { lastScheduleSig = ''; lastActive = null; render(); }
-  window.addEventListener('resize', realign);
-  if (document.fonts) document.fonts.ready.then(realign);
+  let toastTimer = null;
+  function toast(msg, ms) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2200);
+  }
 
-  // ---------- 設定面板 ----------
-  var TABS = [
-    ['exam', '考程表'], ['daily', '日課表'], ['roster', '名單'], ['text', '小叮嚀／標題'],
-    ['labels', '介面文字'], ['look', '外觀'], ['backup', '備份與安全'],
-  ];
+  // ---------------- 畫布 ----------------
+  function fillBg() {
+    pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0);
+    pctx.globalCompositeOperation = 'source-over'; pctx.globalAlpha = 1;
+    pctx.fillStyle = BG; pctx.fillRect(0, 0, paintC.width, paintC.height);
+    pctx.restore();
+  }
+  function clearLive() {
+    lctx.save(); lctx.setTransform(1, 0, 0, 1, 0, 0);
+    lctx.clearRect(0, 0, liveC.width, liveC.height); lctx.restore();
+    layerDirty = false;
+  }
+  // 把「這一次吹畫」的圖層用 multiply 疊到畫紙上 → 與舊顏色自然混色
+  function commitLive() {
+    if (!layerDirty) return;
+    pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0);
+    pctx.globalCompositeOperation = 'multiply'; pctx.globalAlpha = LAYER_ALPHA;
+    pctx.drawImage(liveC, 0, 0);
+    pctx.restore();
+    clearLive();
+  }
+  function finishAll() {
+    if (session) session.head = null;
+    let guard = 0;
+    while (tendrils.length && guard++ < 800) updateChildren(1);
+  }
+  function flushSession() { finishAll(); commitLive(); session = null; }
 
-  $('handle').addEventListener('click', function () {
-    if (settings.pin) askPin(openDrawer); else openDrawer();
+  function resize() {
+    const nw = stage.clientWidth, nh = stage.clientHeight;
+    if (!nw || !nh) return;
+    const coarse = matchMedia('(pointer: coarse)').matches;
+    const d = Math.min(coarse ? 1.5 : 2, window.devicePixelRatio || 1);
+    const key = nw + 'x' + nh + 'x' + d;
+    if (key === sizeKey) return;
+    sizeKey = key;   // 尺寸沒變就不動畫布，避免誤中斷按住中的創作
+    finishAll(); commitLive();                        // 保留按住中的 session，只把已畫的墨水先定稿
+    let old = null;
+    if (W > 0) {
+      old = document.createElement('canvas');
+      old.width = paintC.width; old.height = paintC.height;
+      old.getContext('2d').drawImage(paintC, 0, 0);
+    }
+    U = Math.max(0.5, Math.min(1, Math.min(nw, nh) / 600)); W = nw / U; H = nh / U; DPR = d * U;
+    if (session) session.drawnR = undefined;   // 縮放後重畫水滴
+    for (const c of [paintC, liveC, overC]) { c.width = Math.round(nw * d); c.height = Math.round(nh * d); }
+    pctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    lctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    fillBg();
+    if (old) {
+      pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0); pctx.drawImage(old, 0, 0); pctx.restore();
+    }
+  }
+  window.addEventListener('resize', resize);
+
+  $('clear').addEventListener('click', () => {
+    tendrils.length = 0; session = null; clearLive(); fillBg(); drawTemplate(bgKind);
   });
-  $('btnClose').addEventListener('click', function () { $('drawer').classList.remove('open'); });
-
-  function openDrawer() { $('drawer').classList.add('open'); renderPanel(); }
-
-  function askPin(onOk) {
-    var input = el('input', { type: 'password', inputmode: 'numeric', maxlength: '4' });
-    var err = el('div', { class: 'err' });
-    var bg = el('div', { class: 'modal-bg' }, [el('div', { class: 'modal' }, [
-      el('div', { text: '請輸入 PIN 碼' }), input, err,
-      el('button', { class: 'btn primary', text: '確定', onclick: check }),
-      el('button', { class: 'btn', text: '取消', onclick: function () { bg.remove(); } }),
-    ])]);
-    function check() {
-      if (input.value === settings.pin) { bg.remove(); onOk(); }
-      else { err.textContent = 'PIN 碼錯誤'; input.value = ''; input.focus(); }
-    }
-    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') check(); });
-    document.body.appendChild(bg);
-    input.focus();
-  }
-
-  function renderPanel() {
-    $('tabs').replaceChildren.apply($('tabs'), TABS.map(function (t) {
-      return el('button', { class: 'tab' + (t[0] === currentTab ? ' on' : ''), text: t[1],
-        onclick: function () { currentTab = t[0]; renderPanel(); } });
-    }));
-    var panel = $('panel');
-    panel.replaceChildren();
-    PANELS[currentTab](panel);
-  }
-
-  function textInput(value, onInput, attrs) {
-    return el('input', Object.assign({ type: 'text', value: value == null ? '' : value,
-      oninput: function (e) { onInput(e.target.value); commit(); } }, attrs || {}));
-  }
-  function timeInput(value, onChange) {
-    return el('input', { type: 'time', value: value, onchange: function (e) {
-      if (e.target.value) { onChange(e.target.value); commit(); }
-    } });
-  }
-  function textArea(value, onInput) {
-    var t = el('textarea', { oninput: function (e) { onInput(e.target.value); commit(); } });
-    t.value = value;
-    return t;
-  }
-  function button(text, onClick, cls) { return el('button', { class: 'btn ' + (cls || ''), text: text, onclick: onClick }); }
-
-  // 時間、科目、emoji 的列編輯器，考程表與節次時間表共用。
-  function rowsEditor(rows, withSubject, onChange) {
-    var table = el('table');
-    if (rows.some(function (r) { return r.end <= r.start; })) {
-      table.appendChild(el('caption', { class: 'err', text: '紅色列的結束時間沒有晚於開始時間，這一節不會被標示。' }));
-    }
-    table.appendChild(el('tr', {}, [
-      el('th', { text: '開始' }), el('th', { text: '結束' }),
-      withSubject ? el('th', { text: '科目' }) : null, el('th', { text: 'emoji' }), el('th'),
-    ]));
-    rows.forEach(function (r, i) {
-      var bad = r.end <= r.start; // HH:MM 字串可直接比較
-      table.appendChild(el('tr', bad ? { style: 'background:#fde2e2', title: '結束時間必須晚於開始時間' } : {}, [
-        el('td', {}, [timeInput(r.start, function (v) { r.start = v; })]),
-        el('td', {}, [timeInput(r.end, function (v) { r.end = v; })]),
-        withSubject ? el('td', {}, [textInput(r.subject, function (v) { r.subject = v; })]) : null,
-        el('td', {}, [textInput(r.emoji, function (v) { r.emoji = v; }, { class: 'narrow' })]),
-        el('td', {}, [button('刪除', function () { rows.splice(i, 1); onChange(i); }, 'danger')]),
-      ]));
-    });
-    return table;
-  }
-
-  var PANELS = {
-    exam: function (p) {
-      var dates = Object.keys(settings.examDays).sort();
-      p.appendChild(el('h3', { text: '指定日期考程表' }));
-      p.appendChild(el('p', { class: 'hint', text: '有建立考程表的日期會優先顯示考程表；沒有的日期依「日課表」顯示。補課日也可以在這裡建立。' }));
-      var dateInput = el('input', { type: 'date', value: editingDate, onchange: function (e) {
-        if (e.target.value) { editingDate = e.target.value; renderPanel(); }
-      } });
-      p.appendChild(el('label', { text: '編輯日期' }));
-      p.appendChild(dateInput);
-      if (dates.length) {
-        p.appendChild(el('p', { class: 'hint', text: '已建立：' }));
-        p.appendChild(el('div', { class: 'chips' }, dates.map(function (d) {
-          return el('span', { class: 'chip' + (d === editingDate ? ' pulled' : ''), text: d,
-            onclick: function () { editingDate = d; renderPanel(); } });
-        })));
-      }
-      var rows = settings.examDays[editingDate];
-      if (!rows) {
-        p.appendChild(button('建立空白考程表', function () {
-          settings.examDays[editingDate] = [{ start: '08:00', end: '08:45', subject: '', emoji: '' }]; commit(); renderPanel();
-        }, 'primary'));
-        p.appendChild(button('用範例考程建立', function () {
-          settings.examDays[editingDate] = JSON.parse(JSON.stringify(DEMO_EXAM)); commit(); renderPanel();
-        }));
-        return;
-      }
-      p.appendChild(rowsEditor(rows, true, function () { commit(); renderPanel(); }));
-      p.appendChild(button('＋ 新增一節', function () {
-        rows.push(Object.assign(nextPeriod(rows), { subject: '' })); commit(); renderPanel();
-      }));
-      p.appendChild(el('h3', { text: '複製或刪除' }));
-      var copyTo = el('input', { type: 'date' });
-      p.appendChild(el('label', { text: '把這天的考程表複製到' }));
-      p.appendChild(copyTo);
-      p.appendChild(button('複製', function () {
-        if (!copyTo.value) return alert('請先選擇目標日期');
-        if (settings.examDays[copyTo.value] && !confirm(copyTo.value + ' 已有考程表，要覆蓋嗎？')) return;
-        settings.examDays[copyTo.value] = JSON.parse(JSON.stringify(rows));
-        editingDate = copyTo.value; commit(); renderPanel();
-      }));
-      p.appendChild(button('刪除這天的考程表', function () {
-        if (!confirm('確定刪除 ' + editingDate + ' 的考程表？')) return;
-        delete settings.examDays[editingDate]; commit(); renderPanel();
-      }, 'danger'));
-    },
-
-    daily: function (p) {
-      var bells = settings.bellSchedule;
-      p.appendChild(el('h3', { text: '節次時間表（每天共用）' }));
-      p.appendChild(el('p', { class: 'hint', text: '早自習、午休也可以當成一節。emoji 會顯示在「目前狀態」前面。' }));
-      p.appendChild(rowsEditor(bells, false, function (removed) {
-        // 週課表與節次以索引對應，刪掉一節時各天的科目一起往前移
-        [1, 2, 3, 4, 5].forEach(function (d) { settings.weekly[d].splice(removed, 1); });
-        commit(); renderPanel();
-      }));
-      p.appendChild(button('＋ 新增一節', function () { bells.push(nextPeriod(bells)); commit(); renderPanel(); }));
-      p.appendChild(el('h3', { text: '週課表' }));
-      p.appendChild(el('p', { class: 'hint', text: '科目留空的節次不會顯示在看板上。' }));
-      var table = el('table');
-      table.appendChild(el('tr', {}, [el('th', { text: '時間' })].concat([1, 2, 3, 4, 5].map(function (d) {
-        return el('th', { text: '週' + WEEKDAYS[d] });
-      }))));
-      bells.forEach(function (b, i) {
-        table.appendChild(el('tr', {}, [el('td', { text: b.start })].concat([1, 2, 3, 4, 5].map(function (d) {
-          return el('td', {}, [textInput(settings.weekly[d][i] || '', function (v) { settings.weekly[d][i] = v; })]);
-        }))));
-      });
-      p.appendChild(table);
-    },
-
-    roster: function (p) {
-      p.appendChild(el('label', { text: '班級名稱' }));
-      p.appendChild(textInput(settings.className, function (v) { settings.className = v; }));
-      p.appendChild(el('label', { text: '全班名單（一行一位）' }));
-      p.appendChild(el('p', { class: 'hint', text: '行首寫座號，例如「7號 王小明」或「7」。看板只顯示座號；沒有座號的行只顯示姓氏加 XX（例如「王XX」）。' }));
-      var chips = el('div', { class: 'chips' });
-      p.appendChild(textArea(settings.roster, function (v) { settings.roster = v; drawChips(); }));
-      p.appendChild(el('h3', { text: '今日出缺席（點一下切換：到 → 未到 → 抽離）' }));
-      p.appendChild(chips);
-      p.appendChild(button('全部重設為「到」', function () { settings.attendance.marks = {}; commit(); drawChips(); }));
-      function drawChips() {
-        var marks = settings.attendance.marks;
-        chips.replaceChildren.apply(chips, L.parseRoster(settings.roster).map(function (s) {
-          var m = marks[s.key];
-          var tag = m === 'absent' ? '（' + settings.labels.absent + '）' : m === 'pulled' ? '（' + settings.labels.pulled + '）' : '';
-          return el('span', { class: 'chip ' + (m || ''), text: s.line + tag, onclick: function () {
-            var nextMark = MARK_CYCLE[m];
-            if (nextMark) marks[s.key] = nextMark; else delete marks[s.key];
-            commit(); drawChips();
-          } });
-        }));
-      }
-      drawChips();
-    },
-
-    text: function (p) {
-      p.appendChild(el('label', { text: '頂部標題（留空則不顯示）' }));
-      p.appendChild(textInput(settings.title, function (v) { settings.title = v; }));
-      p.appendChild(el('label', { text: '導師小叮嚀（一行一條，自動編號）' }));
-      p.appendChild(textArea(settings.tips, function (v) { settings.tips = v; }));
-    },
-
-    labels: function (p) {
-      p.appendChild(el('p', { class: 'hint', text: '時間、數字、科目名稱由程式自動帶入，這裡只改固定文字。' }));
-      LABEL_NAMES.forEach(function (n) {
-        p.appendChild(el('label', { text: n[1] }));
-        p.appendChild(textInput(settings.labels[n[0]], function (v) { settings.labels[n[0]] = v; }));
-        if (/\{subject\}/.test(L.defaultSettings().labels[n[0]])) {
-          p.appendChild(el('p', { class: 'hint err', text: '⚠️ 請不要更改或刪除文字中的 {subject}，它會自動換成' +
-            (n[0] === 'countdownNext' ? '下一節的' : '目前的') + '科目名稱。其他文字可以自由修改。' }));
+  $('save').addEventListener('click', () => {
+    flushSession();
+    paintC.toBlob(blob => {
+      if (!blob) { toast('儲存失敗，請改用螢幕截圖'); return; }
+      (async () => {
+        if (window.claude) {   // Claude 內嵌頁面：要透過 downloads 能力儲存
+          const dl = await claude.use('downloads');
+          if (!dl) { toast('此環境無法儲存，請改用螢幕截圖'); return; }
+          try { await dl.save({ filename: 'rainbow-blow-painting.png', data: blob }); toast('💾 作品已儲存（PNG）'); }
+          catch (e) { if (!e || e.code !== 'declined') toast('儲存失敗，請改用螢幕截圖'); }
+          return;
         }
-      });
-    },
-
-    look: function (p) {
-      p.appendChild(el('h3', { text: '預設配色' }));
-      Object.keys(L.THEME_PRESETS).forEach(function (k) {
-        p.appendChild(button(L.THEME_PRESETS[k].name, function () {
-          settings.theme = { preset: k, colors: Object.assign({}, L.THEME_PRESETS[k].colors) }; commit(); renderPanel();
-        }, settings.theme.preset === k ? 'primary' : ''));
-      });
-      p.appendChild(el('h3', { text: '逐項調整顏色' }));
-      var grid = el('div', { class: 'color-grid' });
-      COLOR_NAMES.forEach(function (n) {
-        grid.appendChild(el('span', { text: n[1] }));
-        grid.appendChild(el('input', { type: 'color', value: settings.theme.colors[n[0]], oninput: function (e) {
-          settings.theme.colors[n[0]] = e.target.value; settings.theme.preset = ''; commit();
-        } }));
-      });
-      p.appendChild(grid);
-      p.appendChild(el('h3', { text: '字級與提醒' }));
-      var scaleText = el('span', { text: Math.round(settings.fontScale * 100) + '%' });
-      p.appendChild(el('label', {}, [document.createTextNode('整體字級縮放 '), scaleText]));
-      p.appendChild(el('input', { type: 'range', min: '0.8', max: '1.5', step: '0.05', value: settings.fontScale, style: 'width:100%',
-        oninput: function (e) { settings.fontScale = Number(e.target.value); scaleText.textContent = Math.round(settings.fontScale * 100) + '%'; commit(); } }));
-      p.appendChild(el('label', { text: '倒數剩下幾分鐘開始提醒（變色閃爍，不出聲）' }));
-      p.appendChild(el('input', { type: 'number', min: '0', max: '60', value: settings.alertMinutes, oninput: function (e) {
-        var v = Number(e.target.value); if (e.target.value !== '' && v >= 0) { settings.alertMinutes = v; commit(); }
-      } }));
-      p.appendChild(el('label', { text: '節次沒填 emoji 時的預設圖示' }));
-      p.appendChild(textInput(settings.defaultEmoji, function (v) { settings.defaultEmoji = v; }, { class: 'narrow' }));
-    },
-
-    backup: function (p) {
-      p.appendChild(el('h3', { text: '匯出／匯入設定檔' }));
-      p.appendChild(el('p', { class: 'hint', text: '設定存在這台電腦的瀏覽器裡。換電腦、換瀏覽器或搬動這個 html 檔前，請先匯出備份。' }));
-      p.appendChild(button('匯出設定檔', function () {
-        var blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
-        var a = el('a', { href: URL.createObjectURL(blob), download: '班級看板設定-' + L.dateKey(new Date()) + '.json' });
+        const url = URL.createObjectURL(blob), a = document.createElement('a');   // 自行架設／本機檔案：直接下載
+        a.href = url; a.download = '七彩吹畫作品.png';
         document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
-      }, 'primary'));
-      var msg = el('div', { class: 'err' });
-      var file = el('input', { type: 'file', accept: '.json,application/json', onchange: function (e) {
-        var f = e.target.files[0];
-        if (!f) return;
-        f.text().then(function (text) {
-          var r = L.importSettings(text);
-          if (!r.ok) { msg.textContent = '匯入失敗：' + r.error + '（原本的設定沒有變動）'; return; }
-          settings = r.settings; commit(); renderPanel();
-          alert('匯入成功');
-        });
-      } });
-      p.appendChild(el('label', { text: '匯入設定檔' }));
-      p.appendChild(file);
-      p.appendChild(msg);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        toast('💾 作品已儲存（PNG）');
+      })();
+    }, 'image/png');
+  });
 
-      p.appendChild(el('h3', { text: 'PIN 碼（防學生誤觸）' }));
-      p.appendChild(el('p', { class: 'hint', text: settings.pin ? '目前已啟用 PIN 碼。' : '目前未啟用。啟用後，開啟設定面板前需要輸入 4 位數 PIN 碼。這只能防止誤觸，不是安全保護。' }));
-      var pinInput = el('input', { type: 'password', inputmode: 'numeric', maxlength: '4', placeholder: '4 位數字' });
-      var pinMsg = el('div', { class: 'err' });
-      p.appendChild(pinInput);
-      p.appendChild(button(settings.pin ? '更改 PIN 碼' : '啟用 PIN 碼', function () {
-        if (!/^\d{4}$/.test(pinInput.value)) { pinMsg.textContent = 'PIN 碼必須是 4 位數字'; return; }
-        settings.pin = pinInput.value; commit(); renderPanel();
-      }, 'primary'));
-      if (settings.pin) p.appendChild(button('停用 PIN 碼', function () { settings.pin = ''; commit(); renderPanel(); }, 'danger'));
-      p.appendChild(pinMsg);
-
-      p.appendChild(el('h3', { text: '還原' }));
-      p.appendChild(button('全部還原為預設值', function () {
-        if (!confirm('所有設定（考程、課表、名單、文字、顏色）都會清除，確定嗎？建議先匯出備份。')) return;
-        settings = L.defaultSettings(); commit(); renderPanel();
-      }, 'danger'));
-    },
+  // ---------------- 造型畫布背景：線稿直接畫進畫紙本體 → 「儲存作品」的 PNG 會一起輸出 ----------------
+  // 全部用 Canvas 路徑繪製，不使用任何外部圖片，離線也能正常顯示。
+  const tplC = document.createElement('canvas');
+  const TPL_ALPHA = 0.45;   // 線稿不透明度（0.35~0.5）
+  let emotion = 'happy';
+  const EMO = {   // br：眉頭下壓(+)／上揚(−)　up：眉毛整條上提　m：嘴角(+笑 −苦；0=張嘴)　ps：瞳孔縮放
+    happy: { br: 0, up: 0, m: 1, ps: 1, tear: 0, hint: '😊 開心：用七彩顏色吹出蓬鬆、向上飛揚的頭髮／刺！' },
+    angry: { br: 16, up: 0, m: -0.5, ps: 1, tear: 0, hint: '😠 生氣：用紅色、橘色吹出又直又尖、往上豎起來！' },
+    sad: { br: -13, up: 4, m: -1, ps: 1, tear: 1, hint: '😢 難過：用藍色、靛色吹出往下垂的長髮／刺！' },
+    surprise: { br: 0, up: -16, m: 0, ps: 0.6, tear: 0, hint: '😲 驚訝：用黃色、橘色吹出爆炸般散開的頭髮／刺！' }
   };
 
-  applyAppearance();
-  render();
-  setInterval(render, 1000);
+  function drawElephant(t) {          // 大象：側面朝右、象鼻高舉，鼻尖上方留給學生吹出噴水水花
+    const fs = () => { t.fill(); t.stroke(); };
+    [-205, -125, 0, 80].forEach(x => { t.beginPath(); t.rect(x, 120, 58, 120); fs(); });                // 四隻腳
+    t.beginPath(); t.moveTo(-232, 20); t.quadraticCurveTo(-292, 60, -262, 140); t.stroke();            // 尾巴
+    t.beginPath(); t.ellipse(-40, 40, 205, 140, 0, 0, TAU); fs();                                      // 身體
+    const trunk = () => { t.beginPath(); t.moveTo(215, 30); t.bezierCurveTo(285, 70, 350, 40, 335, -40); t.bezierCurveTo(325, -95, 340, -130, 356, -165); };
+    t.lineWidth = 48.5; trunk(); t.strokeStyle = '#444'; t.stroke();                                   // 象鼻外框
+    t.lineWidth = 44; trunk(); t.strokeStyle = BG; t.stroke();                                         // 象鼻內填
+    t.strokeStyle = '#444'; t.lineWidth = 4.5;
+    t.beginPath(); t.ellipse(160, -5, 92, 98, 0, 0, TAU); fs();                                        // 頭
+    t.beginPath(); t.ellipse(105, 15, 62, 88, 0.1, 0, TAU); fs();                                      // 大耳朵
+    t.fillStyle = '#444'; t.beginPath(); t.arc(192, -28, 8, 0, TAU); t.fill();                         // 眼睛
+    t.fillStyle = BG; t.beginPath(); t.arc(195, -31, 2.8, 0, TAU); t.fill();
+    t.beginPath(); t.moveTo(214, 52); t.quadraticCurveTo(232, 66, 248, 50); t.stroke();               // 嘴
+    t.save(); t.strokeStyle = '#6fb6e6'; t.lineWidth = 3; t.setLineDash([6, 11]);                      // 噴水方向提示
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + (i - 2) * 0.38, c = Math.cos(a), s = Math.sin(a);
+      t.beginPath(); t.moveTo(356 + c * 30, -175 + s * 30); t.lineTo(356 + c * 150, -175 + s * 150); t.stroke();
+    }
+    t.restore();
+  }
+
+  function drawHedgehog(t) {          // 小刺蝟：朝右、身體沒有刺，背上留給學生吹出彩色的刺
+    const fs = () => { t.fill(); t.stroke(); };
+    [[-85, 120], [65, 124]].forEach(([x, y]) => { t.beginPath(); t.ellipse(x, y, 38, 22, 0, 0, TAU); fs(); });  // 腳
+    t.beginPath(); t.ellipse(-205, 45, 24, 15, -0.5, 0, TAU); fs();                                            // 尾巴
+    t.beginPath(); t.ellipse(-25, -5, 185, 130, 0, 0, TAU); fs();                                              // 身體
+    t.beginPath(); t.ellipse(118, -74, 22, 27, 0.2, 0, TAU); fs();                                             // 耳朵
+    t.beginPath(); t.ellipse(118, -72, 11, 15, 0.2, 0, TAU); t.stroke();
+    t.beginPath(); t.moveTo(110, -75);                                                                         // 臉
+    t.bezierCurveTo(165, -85, 235, -25, 266, 25);
+    t.bezierCurveTo(246, 56, 190, 100, 120, 98);
+    t.bezierCurveTo(95, 70, 95, -40, 110, -75);
+    t.closePath(); fs();
+    t.fillStyle = '#444';
+    t.beginPath(); t.arc(190, -8, 8, 0, TAU); t.fill();                                                        // 眼睛
+    t.beginPath(); t.arc(266, 26, 10, 0, TAU); t.fill();                                                       // 鼻子
+    t.fillStyle = BG;
+    t.beginPath(); t.arc(193, -11, 2.8, 0, TAU); t.fill();                                                     // 眼睛反光
+    { const E = EMO[emotion], m = E.m, oy = -32 + E.up - E.br * 0.4, iy = -32 + E.up + E.br;
+    t.beginPath();
+    if (m === 0) { t.ellipse(236, 72, 9, 13, 0, 0, TAU); fs(); } else { t.moveTo(214, 66); t.quadraticCurveTo(232, 66 + 22 * m, 250, 62); t.stroke(); }
+    t.beginPath(); t.moveTo(172, oy); t.quadraticCurveTo(190, (oy + iy) / 2 - (E.br ? 2 : 10), 208, iy); t.stroke();
+    if (E.tear) { t.beginPath(); t.ellipse(192, 30, 5, 8, 0, 0, TAU); fs(); } }                        // 嘴巴
+    t.lineWidth = 2.5;
+    t.beginPath(); t.ellipse(172, 42, 14, 9, 0, 0, TAU); t.stroke();                                           // 臉頰
+  }
+
+  function drawPerson(t) {            // 光頭動漫人物：正面、沒有頭髮，頭頂周圍留給學生吹出爆炸頭／長髮
+    const fs = () => { t.fill(); t.stroke(); };
+    t.beginPath(); t.rect(-34, 100, 68, 75); fs();                                                             // 脖子
+    t.beginPath(); t.moveTo(-200, 290); t.bezierCurveTo(-200, 200, -120, 172, -38, 160);                       // 肩膀
+    t.quadraticCurveTo(0, 185, 38, 160); t.bezierCurveTo(120, 172, 200, 200, 200, 290); t.closePath(); fs();
+    t.beginPath(); t.moveTo(-26, 168); t.lineTo(0, 215); t.lineTo(26, 168); t.stroke();                        // 領口
+    [-1, 1].forEach(sx => {                                                                                    // 耳朵
+      t.beginPath(); t.ellipse(sx * 122, -5, 22, 30, 0, 0, TAU); fs();
+      t.beginPath(); t.ellipse(sx * 124, -5, 10, 16, 0, 0, TAU); t.stroke();
+    });
+    t.beginPath(); t.ellipse(0, -25, 120, 140, 0, 0, TAU); fs();                                               // 光頭
+    t.lineWidth = 4;
+    t.beginPath(); t.moveTo(-70, -112); t.quadraticCurveTo(-48, -135, -18, -142); t.stroke();                  // 頭頂反光
+    [-1, 1].forEach(sx => {
+      const x = sx * 48, y = -10;
+      t.lineWidth = 4.5;
+      t.beginPath(); t.ellipse(x, y, 23, 31, 0, 0, TAU); fs();                                                 // 大眼睛
+      t.fillStyle = '#444'; t.beginPath(); t.ellipse(x, y + 4, 14 * EMO[emotion].ps, 21 * EMO[emotion].ps, 0, 0, TAU); t.fill();                   // 瞳孔
+      t.fillStyle = BG;
+      t.beginPath(); t.arc(x - 6, y - 6, 5, 0, TAU); t.fill();
+      t.beginPath(); t.arc(x + 7, y + 12, 2.5, 0, TAU); t.fill();
+      t.lineWidth = 5;
+      const E = EMO[emotion], oy = -58 + E.up - E.br * 0.4, iy = -58 + E.up + E.br;
+      t.beginPath(); t.moveTo(x + sx * 26, oy); t.quadraticCurveTo(x, (oy + iy) / 2 - (E.br ? 3 : 14), x - sx * 26, iy); t.stroke();
+      if (E.tear) { t.lineWidth = 3; t.beginPath(); t.ellipse(x + sx * 8, y + 46, 5, 8, 0, 0, TAU); fs(); }               // 眉毛
+      t.lineWidth = 2.5;
+      t.beginPath(); t.ellipse(sx * 82, 48, 16, 9, 0, 0, TAU); t.stroke();                                     // 臉頰
+    });
+    t.lineWidth = 4;
+    t.beginPath(); t.moveTo(0, 22); t.lineTo(-5, 38); t.lineTo(5, 40); t.stroke();                             // 鼻子
+    { const m = EMO[emotion].m; t.beginPath();
+      if (m === 0) { t.ellipse(0, 88, 14, 19, 0, 0, TAU); fs(); } else { t.moveTo(-30, 80); t.quadraticCurveTo(0, 80 + 26 * m, 30, 80); t.stroke(); } }                           // 微笑
+  }
+
+  function drawTemplate(kind) {
+    if (kind === 'blank' || !W) return;
+    tplC.width = paintC.width; tplC.height = paintC.height;
+    const t = tplC.getContext('2d');
+    t.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const s = Math.min(W / 700, H / 620);
+    t.translate(W / 2, H / 2 + (kind === 'hedgehog' ? 20 : kind === 'elephant' ? 50 : -25));
+    t.scale(s, s);
+    t.lineWidth = 4.5; t.lineJoin = 'round'; t.lineCap = 'round';
+    t.strokeStyle = '#444'; t.fillStyle = BG;
+    kind === 'hedgehog' ? drawHedgehog(t) : kind === 'elephant' ? drawElephant(t) : drawPerson(t);
+    // 先在獨立圖層用實色畫完（遮擋才乾淨），再以半透明疊到畫紙上
+    pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0);
+    pctx.globalCompositeOperation = 'source-over'; pctx.globalAlpha = TPL_ALPHA;
+    pctx.drawImage(tplC, 0, 0);
+    pctx.restore();
+  }
+
+  function setBackground(kind) {
+    flushSession(); tendrils.length = 0; clearLive();
+    fillBg(); bgKind = kind; drawTemplate(kind);
+    document.querySelectorAll('#bg-group .btn').forEach(b => b.classList.toggle('active', b.dataset.bg === kind));
+    if (kind === 'elephant') sw.children[4].click();   // 水花用藍色
+    toast(kind === 'hedgehog' ? '🦔 ' + EMO[emotion].hint : kind === 'person' ? '👤 ' + EMO[emotion].hint
+        : kind === 'elephant' ? '🐘 在象鼻尖端按住滴水，往上吹出噴水的水花！' : '⬜ 已切換為空白畫布', 4000);
+  }
+  document.querySelectorAll('#bg-group .btn').forEach(b => b.addEventListener('click', () => setBackground(b.dataset.bg)));
+  document.querySelectorAll('#emo-group .btn').forEach(b => b.addEventListener('click', () => {
+    emotion = b.dataset.emo;
+    document.querySelectorAll('#emo-group .btn').forEach(x => x.classList.toggle('active', x === b));
+    setBackground(bgKind);
+  }));
+
+  // ---------------- 麥克風 / 音量（唯一的吹力來源） ----------------
+  let vol = 0, micReady = false, analyser = null, buf = null, audioCtx = null;
+  let calib = false, calibT0 = 0, calibSum = 0, calibN = 0, baseDb = -60;
+  let sens = 5, simOn = false, spaceDown = false, simLevel = 0;
+  const meterFill = $('meter-fill'), meterVal = $('meter-val'), micStatus = $('mic-status'), micBtn = $('mic-btn');
+
+  $('sens').addEventListener('input', e => { sens = +e.target.value; });
+
+  function startCalibration() {
+    calib = true; calibT0 = performance.now(); calibSum = 0; calibN = 0;
+    micStatus.textContent = '🔇 校正環境音中…請先保持安靜';
+  }
+  async function startMic() {
+    try {
+      micStatus.textContent = '正在請求麥克風權限…';
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const resumed = audioCtx.resume();   // 與 getUserMedia 同一次點擊內呼叫（不先 await）
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+      await resumed;
+      const src = audioCtx.createMediaStreamSource(stream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024; analyser.smoothingTimeConstant = 0;
+      src.connect(analyser);
+      buf = new Float32Array(analyser.fftSize);
+      micReady = true; simOn = false;
+      micBtn.textContent = '🎚️ 重新校正環境音';
+      startCalibration();
+    } catch (err) {
+      simOn = true;
+      let emb = true; try { emb = window.self !== window.top; } catch (_) {}
+      micStatus.textContent = '⚠️ 無法使用麥克風（' + (err && err.name ? err.name : '錯誤') + '）' +
+        (emb ? '：這個頁面被放在內嵌視窗裡，系統沒有開放麥克風給它。請改用瀏覽器直接開啟（或放到自己的網站）。' : '：請到瀏覽器的網站設定允許麥克風。') +
+        '桌機可按住空白鍵模擬吹氣。';
+    }
+  }
+  const onMicTap = () => { micReady ? startCalibration() : startMic(); };
+  micBtn.addEventListener('click', onMicTap);
+  micBtn.addEventListener('touchstart', e => { e.preventDefault(); onMicTap(); }, { passive: false });
+
+  function setOpen(v) { document.body.classList.toggle('open', v); $('more').classList.toggle('active', v); }
+  $('more').addEventListener('click', () => setOpen(!document.body.classList.contains('open')));
+  $('stay').addEventListener('click', () => document.body.classList.add('allowland'));
+  const mqP = matchMedia('(max-aspect-ratio: 1/1)'), sensRow = $('sens-row');
+  const placeSens = () => (mqP.matches ? $('sheet') : $('meter-panel')).appendChild(sensRow);
+  placeSens(); mqP.addEventListener('change', placeSens);
+  window.addEventListener('keydown', e => { if (e.code === 'Space') { spaceDown = true; if (simOn) e.preventDefault(); } });
+  window.addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
+
+  function updateVolume(dt) {
+    let target = 0;
+    if (micReady) {
+      analyser.getFloatTimeDomainData(buf);
+      let s = 0;
+      for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+      const rms = Math.sqrt(s / buf.length);
+      const db = 20 * Math.log10(Math.max(rms, 1e-5));
+      if (calib) {
+        calibSum += db; calibN++;
+        if (performance.now() - calibT0 > 1200) {
+          baseDb = Math.max(-75, calibSum / calibN); calib = false;
+          micStatus.textContent = '✅ 麥克風就緒：按住畫布，再對著麥克風吹氣';
+        }
+      } else {
+        const span = 70 - 6 * sens;           // 靈敏度越高，越小的聲音就能到達滿格
+        const floorDb = baseDb + 6;           // 環境音再高一點點才算有聲音
+        target = Math.max(0, Math.min(100, (db - floorDb) / span * 100));
+      }
+    } else if (simOn) {
+      simLevel = spaceDown ? Math.min(100, simLevel + 70 * dt) : Math.max(0, simLevel - 250 * dt);
+      target = simLevel;
+    }
+    vol += (target - vol) * (target > vol ? 0.6 : 0.2);
+    meterVal.textContent = Math.round(vol);
+    meterFill.style.width = vol + '%';
+    meterFill.classList.toggle('blowing', vol > THRESH);
+  }
+
+  // ---------------- 游標：吸管位置 + 風向箭頭方向 ----------------
+  function pos(e) {
+    const r = overC.getBoundingClientRect();
+    return { x: (e.clientX - r.left) / U, y: (e.clientY - r.top) / U };
+  }
+  function makeBlob() {
+    const n = 36;
+    let a = Array.from({ length: n }, () => Math.random());
+    for (let k = 0; k < 3; k++) a = a.map((v, i) => (a[(i + n - 1) % n] + v * 2 + a[(i + 1) % n]) / 4);
+    const mn = Math.min(...a), mx = Math.max(...a);
+    return a.map(v => (v - mn) / ((mx - mn) || 1));
+  }
+  function newSession(x, y) {
+    return { x, y, r: 4, color: COLORS[colorIdx].c, blob: makeBlob(), head: null };
+  }
+  function down(e) {
+    e.preventDefault();
+    if (document.body.classList.contains('open')) setOpen(false);
+    if (e.pointerType === 'touch') aim = -Math.PI / 2;   // 手指沒有「懸停」可指方向：預設朝上，按住後拖曳調整
+    try { overC.setPointerCapture(e.pointerId); } catch (_) {}
+    const p = pos(e);
+    pointer.x = p.x; pointer.y = p.y; pointer.inside = true;
+    lastMove.x = p.x; lastMove.y = p.y; lastMove.has = true;
+    flushSession();
+    pressed = true;
+    session = newSession(p.x, p.y);
+  }
+  function move(e) {
+    const p = pos(e);
+    pointer.x = p.x; pointer.y = p.y; pointer.inside = true;
+    if (pressed && session) {
+      // 按住時：從水滴指向游標的方向 = 箭頭方向（只決定方向，距離長短完全不影響遠近）
+      const dx = p.x - session.x, dy = p.y - session.y;
+      if (Math.hypot(dx, dy) > 6) aim = lerpAngle(aim, Math.atan2(dy, dx), 0.6);
+    } else if (lastMove.has) {
+      const dx = p.x - lastMove.x, dy = p.y - lastMove.y;
+      if (Math.hypot(dx, dy) > 4) {
+        aim = lerpAngle(aim, Math.atan2(dy, dx), 0.3);
+        lastMove.x = p.x; lastMove.y = p.y;
+      }
+    } else { lastMove.x = p.x; lastMove.y = p.y; lastMove.has = true; }
+  }
+  function up(e) {
+    pressed = false;
+    if (session) session.head = null;   // 放開 = 吸管離開，主水流停止，細分支自己流完
+    session = null;
+    if (e && e.pointerType === 'touch') pointer.inside = false;
+  }
+  overC.addEventListener('pointerdown', down);
+  overC.addEventListener('pointermove', move);
+  overC.addEventListener('pointerup', up);
+  overC.addEventListener('pointercancel', up);
+  overC.addEventListener('contextmenu', e => e.preventDefault());   // 長按不要跳選單
+  overC.addEventListener('pointerleave', () => { if (!pressed) pointer.inside = false; });
+
+  // ---------------- 吸管角度（15°~90°）→ 墨水外觀 ----------------
+  // 低角度：風與紙面平行、推力大 → 主幹極寬極厚、整片蔓延，兩側有短的片狀噴濺
+  // 高角度：風直射紙面 → 主幹極細，從水滴邊緣放射出許多細長、多分支的樹枝
+  const tilt = { deg: 45, t: 0.4, widthMul: 1.4, Rmul: 1.1, spMul: 1.1, flakeChance: 0.2, branchChance: 0.27, maxDepth: 2, fanHalf: 0.6, rayRate: 0.3 };
+  function applyAngle(deg) {
+    const t = clamp01((deg - 15) / 75), L = 1 - t;
+    tilt.deg = deg; tilt.t = t;
+    tilt.widthMul = 4.5 * Math.exp(Math.log(0.25 / 4.5) * t);   // 15°≈4.5 倍粗 → 90°≈0.25 倍（極細）
+    tilt.Rmul = 1.35 - 0.5 * t;                                 // 低角度推力大、衝得更遠
+    tilt.spMul = 1.25 - 0.35 * t;
+    tilt.flakeChance = 0.6 * Math.pow(L, 1.4);                  // 主幹兩側的片狀噴濺機率
+    tilt.branchChance = 0.15 + 0.3 * t;                         // 高角度：分支更多（低角度維持 15%）
+    tilt.maxDepth = t > 0.55 ? 3 : 2;                           // 高角度：樹枝可再分更多層
+    tilt.fanHalf = 0.25 + 0.9 * t;                              // 高角度：放射範圍更寬
+    tilt.rayRate = Math.pow(t, 1.2);                            // 高角度：放射細枝的機率
+    $('angle-val').textContent = Math.round(deg) + '°';
+    const rad = deg * Math.PI / 180, sl = $('straw-line');
+    sl.setAttribute('x2', (10 + 30 * Math.cos(rad)).toFixed(1));
+    sl.setAttribute('y2', (26 - 22 * Math.sin(rad)).toFixed(1));
+  }
+  const angleInput = $('angle');
+  angleInput.addEventListener('input', () => applyAngle(+angleInput.value));
+  applyAngle(+angleInput.value);
+
+  // ---------------- 流體水痕 ----------------
+  function makeTendril(x, y, angle, color, depth, main) {
+    return { x, y, angle, av: 0, D: 0, w0: 3, w: 3, wn: 1, color, depth, main, reach: 30, speed: 5, since: 0 };
+  }
+
+  const MAX_TENDRILS = 380;
+  function maybeBranch(t, R, p) {
+    if (tendrils.length >= MAX_TENDRILS) return;
+    // 低角度：主幹兩側伴隨「短、寬、很快收尖」的片狀噴濺
+    if (t.main && Math.random() < tilt.flakeChance) {
+      const side = Math.random() < 0.5 ? -1 : 1, off = t.w * 0.4 * side;
+      const f = makeTendril(t.x + Math.cos(t.angle + Math.PI / 2) * off, t.y + Math.sin(t.angle + Math.PI / 2) * off,
+                            t.angle + side * (0.5 + Math.random() * 0.8), t.color, 2, false);
+      f.reach = 8 + Math.random() * (22 + 0.1 * R);
+      f.w0 = Math.max(1.5, t.w * (0.28 + Math.random() * 0.25));
+      f.w = f.w0; f.speed = 3 + Math.random() * 4;
+      tendrils.push(f);
+    }
+    // 一般分支：低角度維持 15%，角度越高機率與層數越高（樹枝狀）
+    if (t.depth >= tilt.maxDepth || p < 0.28) return;
+    if (Math.random() >= tilt.branchChance) return;
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const c = makeTendril(t.x, t.y, t.angle + side * (0.35 + Math.random() * 0.85), t.color, t.depth + 1, false);
+    const remaining = Math.max(0, R - t.D);
+    c.reach = Math.max(10, remaining * (0.35 + Math.random() * 0.7) + 8 + (t.depth === 0 ? R * 0.04 : 0));
+    c.w0 = Math.max(0.5, t.w * (0.4 + Math.random() * 0.25));
+    c.w = c.w0;
+    c.speed = 2.5 + Math.random() * 4;
+    tendrils.push(c);
+  }
+
+  // 沿著目前方向前進 dist 像素：細步進、方向慢慢彎、末端越來越不規則、越走越細越淡
+  function advance(t, dist, R) {
+    const n = Math.max(1, Math.ceil(dist / 3.5)), sl = dist / n, k = sl / 3.5;
+    for (let i = 0; i < n; i++) {
+      if (t.D >= R) break;
+      const p = t.D / R;
+      if (t.main) t.angle += wrapPi(aim - t.angle) * 0.07 * k;       // 主水流順著箭頭
+      t.av += (Math.random() - 0.5) * (0.06 + 0.34 * p * p) * k;     // 末端亂流變大
+      t.av *= Math.pow(0.9, k);
+      if (t.av > 0.28) t.av = 0.28; else if (t.av < -0.28) t.av = -0.28;
+      t.angle += t.av * k;
+
+      const nx = t.x + Math.cos(t.angle) * sl, ny = t.y + Math.sin(t.angle) * sl;
+      const target = Math.max(0.45, t.w0 * Math.pow(1 - p, 0.85));    // 由粗漸變到細：隨距離／能量衰減，流暢收尖
+      t.w += (target - t.w) * 0.3;
+      t.wn += (Math.random() - 0.5) * 0.14 * k;                        // 邊緣微微起伏（水流感）
+      if (t.wn > 1.18) t.wn = 1.18; else if (t.wn < 0.82) t.wn = 0.82;
+      const a = p < 0.55 ? 1 : 1 - (p - 0.55) / 0.45 * 0.65;          // 尾端漸漸變淡
+
+      lctx.globalAlpha = a; lctx.strokeStyle = t.color; lctx.lineWidth = Math.max(0.4, t.w * t.wn);
+      lctx.lineCap = 'round'; lctx.lineJoin = 'round';
+      lctx.beginPath(); lctx.moveTo(t.x, t.y); lctx.lineTo(nx, ny); lctx.stroke();
+      lctx.globalAlpha = 1; layerDirty = true;
+
+      t.x = nx; t.y = ny; t.D += sl;
+      t.since += sl;
+      if (t.since >= 12) { t.since -= 12; maybeBranch(t, R, t.D / R); }
+    }
+  }
+
+  function updateChildren(f) {
+    for (let i = tendrils.length - 1; i >= 0; i--) {
+      const t = tendrils[i];
+      if (t.D >= t.reach || t.x < -120 || t.x > W + 120 || t.y < -120 || t.y > H + 120) {
+        tendrils.splice(i, 1); continue;
+      }
+      const p = t.D / t.reach;
+      advance(t, t.speed * (0.3 + 0.7 * (1 - p)) * f, t.reach);
+    }
+  }
+
+  // 水彩暈染：把同一個不規則水滴由大到小疊 6 層半透明（最外層最淡），邊緣自然羽化、像水彩滴在紙上暈開。
+  // 只在水滴長大 ≥2px 時才補畫，避免同一位置反覆疊加而變回硬邊。
+  const PUDDLE_LAYERS = [[1.14, 0.10], [1.06, 0.18], [1.0, 0.30], [0.93, 0.40], [0.85, 0.55], [0.7, 0.80]];
+  function drawPuddle(s) {
+    if (s.drawnR !== undefined && s.r < s.drawnR + 2) return;
+    s.drawnR = s.r;
+    const n = s.blob.length;
+    lctx.fillStyle = s.color;
+    for (const [k, a] of PUDDLE_LAYERS) {
+      lctx.globalAlpha = a; lctx.beginPath();
+      for (let i = 0; i <= n; i++) {
+        const ang = (i % n) / n * TAU, rr = s.r * k * (0.9 + 0.2 * s.blob[i % n]);
+        const x = s.x + Math.cos(ang) * rr, y = s.y + Math.sin(ang) * rr;
+        i ? lctx.lineTo(x, y) : lctx.moveTo(x, y);
+      }
+      lctx.closePath(); lctx.fill();
+    }
+    lctx.globalAlpha = 1; layerDirty = true;
+  }
+
+  // ---------------- 游標層：吸管、風向箭頭、水量 ----------------
+  function drawArrow(x, y, ang, off, len, col, k) {
+    octx.save(); octx.translate(x, y); octx.rotate(ang); octx.lineJoin = 'round';
+    const hw = 8, hh = 20, hl = 26;
+    octx.beginPath();
+    octx.moveTo(off, -hw); octx.lineTo(off + len - hl, -hw); octx.lineTo(off + len - hl, -hh);
+    octx.lineTo(off + len, 0);
+    octx.lineTo(off + len - hl, hh); octx.lineTo(off + len - hl, hw); octx.lineTo(off, hw);
+    octx.closePath();
+    octx.globalAlpha = k; octx.lineWidth = 6; octx.strokeStyle = 'rgba(255,255,255,.9)'; octx.stroke();   // 白色外框：任何底色都看得清楚
+    octx.globalAlpha = 0.8 * k; octx.fillStyle = col; octx.fill();
+    octx.globalAlpha = k; octx.lineWidth = 2; octx.strokeStyle = 'rgba(50,50,50,.85)'; octx.stroke();
+    octx.restore();
+  }
+  function drawStraw(x, y, col, k) {
+    octx.save(); octx.lineCap = 'round';
+    const th = tilt.deg * Math.PI / 180, ex = x + Math.cos(th) * 70, ey = y - Math.sin(th) * 70; octx.globalAlpha = k;
+    octx.beginPath(); octx.moveTo(x, y); octx.lineTo(ex, ey);
+    octx.lineWidth = 11; octx.strokeStyle = 'rgba(70,70,70,.55)'; octx.stroke();
+    octx.lineWidth = 8; octx.strokeStyle = col; octx.stroke();
+    octx.setLineDash([7, 9]); octx.strokeStyle = 'rgba(255,255,255,.85)'; octx.stroke(); octx.setLineDash([]);
+    octx.restore();
+  }
+  // 游標層：只有「按住」時才顯示吸管、風向箭頭、水量；放開後 0.8 秒內淡出到完全隱形
+  let ov = null, ovAlpha = 0;
+  function drawOverlay(power, dt) {
+    if (session) {
+      const s = session;
+      ov = { x: s.x, y: s.y, r: s.r, water: clamp01((s.r - 4) / (MAXR - 4)),
+             px: pointer.x, py: pointer.y, ang: aim, power, col: s.color };
+      ovAlpha = 1;   // 按住期間 100% 顯現
+    } else {
+      ovAlpha = Math.max(0, ovAlpha - dt / 0.8);
+    }
+    octx.clearRect(0, 0, W, H);
+    if (!ov || ovAlpha <= 0) return;
+    const k = ovAlpha;
+    octx.save(); octx.globalAlpha = k;
+    octx.fillStyle = 'rgba(255,255,255,.5)';
+    octx.beginPath(); octx.ellipse(ov.x - ov.r * 0.35, ov.y - ov.r * 0.38, ov.r * 0.2, ov.r * 0.12, -0.6, 0, TAU); octx.fill();
+    octx.fillStyle = '#555'; octx.font = 'bold ' + Math.round(13 / U) + 'px sans-serif'; octx.textAlign = 'center';
+    octx.fillText((ov.power > 0 ? '💨 吹氣中　' : '') + '💧 水量 ' + Math.round(ov.water * 100) + '%', ov.x, ov.y - ov.r - 12);
+    octx.restore();
+    drawArrow(ov.x, ov.y, ov.ang, ov.r + 6, 62 + ov.power * 70 + Math.sin(performance.now() / 220) * 5, ov.col, k);
+    drawStraw(ov.px, ov.py, ov.col, k);
+  }
+
+  // ---------------- 主迴圈 ----------------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const f = dt * 60;
+    updateVolume(dt);
+
+    const power = vol > THRESH ? clamp01((vol - THRESH) / (100 - THRESH)) : 0;
+    if (pressed && !session) session = newSession(pointer.x, pointer.y);
+    const blowing = pressed && session && power > 0;
+
+    if (session) {
+      const s = session;
+      // 沒有吹氣：吸管持續滴水，按越久水滴越大（水量累積）
+      if (!blowing) s.r += (MAXR - s.r) * (1 - Math.exp(-dt / 1.6));
+      const water = clamp01((s.r - 4) / (MAXR - 4));
+
+      if (blowing) {
+        if (!s.head) s.head = makeTendril(
+          s.x + Math.cos(aim) * s.r * 0.85, s.y + Math.sin(aim) * s.r * 0.85,
+          aim, s.color, 0, true);
+        const h = s.head;
+        // 遠近上限 R：由「音量(power)」「水量(water)」與吸管角度決定，與滑鼠移動無關
+        const R = Math.min(900, (60 + 640 * Math.pow(power, 1.3)) * (0.5 + 0.9 * water) * tilt.Rmul);
+        if (h.Rs === undefined) h.Rs = R; else h.Rs += (R - h.Rs) * Math.min(1, 0.12 * f);   // 平滑，收尾才不會突然截斷
+        // 主幹粗細：水越多、吹越用力越粗；低角度 ×4.5 極粗、高角度 ×0.25 極細
+        h.w0 = Math.min(70, Math.max(0.7, (1.5 + water * 8) * (0.5 + 0.8 * power) * tilt.widthMul));
+        if (!h.init) { h.w = h.w0; h.init = true; }   // 起點就是最粗
+        if (h.D < h.Rs) {
+          const p = h.D / h.Rs;
+          const sp = vol * 0.18 * tilt.spMul;   // 推力：每幀前進距離 ∝ 麥克風音量
+          advance(h, sp * (0.25 + 0.75 * (1 - p)) * f, h.Rs);
+          s.r = Math.max(3, s.r - (4 + 30 * power) * dt);   // 吹出去會消耗水量
+        }
+        // 高角度：風直射紙面 → 從水滴邊緣向外放射出許多細長的樹枝（長度仍由當下音量決定）
+        if (tilt.rayRate > 0 && tendrils.length < MAX_TENDRILS &&
+            Math.random() < tilt.rayRate * (0.05 + 0.2 * power) * f) {
+          const a = aim + (Math.random() + Math.random() - 1) * tilt.fanHalf;
+          const c = makeTendril(s.x + Math.cos(a) * s.r * 0.85, s.y + Math.sin(a) * s.r * 0.85, a, s.color, 1, false);
+          c.reach = Math.max(14, R * (0.35 + Math.random() * 0.65));
+          c.w0 = Math.max(0.6, (0.7 + water * 1.3) * (0.7 + 0.6 * power));
+          c.w = c.w0; c.speed = 3 + vol * 0.1;
+          tendrils.push(c);
+          s.r = Math.max(3, s.r - 0.3);
+        }
+      }
+      drawPuddle(s);
+    }
+
+    updateChildren(f);
+    if (!pressed && tendrils.length === 0 && layerDirty) commitLive();
+
+    drawOverlay(power, dt);
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  if (matchMedia('(pointer: coarse)').matches) toast('按住畫布滴水 → 手指往要吹的方向拖曳 → 對著麥克風吹氣', 5000);
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>
 </html>
+目前顯示的是「rainbow_straw_blow_painting_v6_mobile.html」。
