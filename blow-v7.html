@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>七彩虹吸管吹畫 - 麥克風穩定開啟版</title>
+<title>七彩虹吸管吹畫 - 完整修復版</title>
 <style>
 /* ==========================================================================
    1. 共同基礎樣式 (電腦與平板通用)
@@ -18,7 +18,7 @@ body {
   -webkit-user-select: none;
 }
 
-/* 🎨 上方：畫布區（精確佔用 85% 高度，絕不遮擋） */
+/* 🎨 上方：畫布區（精確佔用 85% 高度） */
 canvas {
   display: block;
   width: 100vw;
@@ -200,13 +200,11 @@ let dropletRadius = 5;
 let pressTimer = null;
 let inkParticles = []; 
 
-// 麥克風狀態控制變數
 let audioContext = null;
 let analyser = null;
 let microphone = null;
 let micEnabled = false;
 
-// 1. 重新調整畫布大小 (精確綁定 85vh 高度)
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight * 0.85;
@@ -215,7 +213,6 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 window.addEventListener('DOMContentLoaded', resizeCanvas);
 
-// 2. 繪製背景圖案
 function drawBackground() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   const centerY = canvas.height / 2;
@@ -322,3 +319,4 @@ function simulateBlow(force) {
     let segmentR = (Math.random() * (dropletRadius / 3)) + 1;
     const branchLength = (Math.random() * lengthMultiplier) + 20;
     
+    for (let j = 0; j < branchLength; j++) {
