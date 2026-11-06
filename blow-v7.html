@@ -80,6 +80,8 @@ canvas {
 }
 </style>
 </head>
+</html>
+
 <body>
 
   <canvas id="paintCanvas"></canvas>
@@ -135,7 +137,7 @@ canvas {
       </ol>
     </div>
   </div>
-
+</body>
 <script>
 const canvas = document.getElementById('paintCanvas');
 const ctx = canvas.getContext('2d');
@@ -228,6 +230,7 @@ function simulateBlow(force) {
   }
 }
 
+   
 // 🎯 以下為 UI 控制與麥克風核心邏輯，保證完整寫完
 window.addEventListener('mousedown', handleStart);
 window.addEventListener('mousemove', handleMove);
@@ -311,3 +314,4 @@ updateMicVolumeLoop();
 alert('❌ 麥克風啟動失敗，請確認已核准麥克風權限！');
 }
 });
+</script>
