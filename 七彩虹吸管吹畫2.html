@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>七彩虹吸管吹畫</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; width: 100%; height: 100%; overflow: hidden;
+    background: #fcfaf2;
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    touch-action: none; user-select: none; -webkit-user-select: none;
+  }
+  #stage { position: fixed; inset: 0; isolation: isolate; background: #fcfaf2; }
+  canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  #live { mix-blend-mode: multiply; opacity: .88; pointer-events: none; }
+  #over { cursor: crosshair; touch-action: none; }
+
+  /* ---------- 左下：七彩調色盤（縮小為 1/2） ---------- */
+  #palette {
+    position: absolute; top: 8px; left: 8px; z-index: 10;
+    transform: scale(.5); transform-origin: left top; touch-action: none;
+    background: rgba(255,255,255,.9); border-radius: 20px; padding: 10px 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    max-width: 560px;
+  }
+  #pal-grip { height: 26px; margin: -4px -6px 8px; border-radius: 12px; background: #e9edf3; text-align: center; font-size: 14px; line-height: 26px; color: #667; cursor: grab; }
+  #palette h1 { font-size: 14px; margin: 0 0 8px; color: #555; }
+  #swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .swatch {
+    position: relative; width: 46px; height: 46px; border-radius: 50%;
+    border: 4px solid #fff; cursor: pointer; padding: 0;
+    box-shadow: 0 3px 8px rgba(0,0,0,.25);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .swatch::before {
+    content: ""; position: absolute; left: 10px; top: 13px; width: 5px; height: 5px;
+    background: #333; border-radius: 50%; box-shadow: 14px 0 0 #333;
+  }
+  .swatch::after {
+    content: ""; position: absolute; left: 11px; top: 21px; width: 11px; height: 6px;
+    border: 2.5px solid #333; border-top: none; border-radius: 0 0 11px 11px;
+  }
+  .swatch.dark::before { background: #fff; box-shadow: 14px 0 0 #fff; }
+  .swatch.dark::after { border-color: #fff; }
+  .swatch:active { transform: scale(.92); }
+  .swatch.active { transform: scale(1.15); box-shadow: 0 0 0 3px #444, 0 5px 12px rgba(0,0,0,.3); }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    border: none; border-radius: 14px; padding: 8px 12px; font-weight: bold; font-size: 14px;
+    cursor: pointer; background: #fff; color: #444; box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  }
+  .btn:active { transform: scale(.96); }
+  .btn.active { background: #4a90e2; color: #fff; }
+  #angle-box { margin-bottom: 8px; min-width: 250px; }
+  #angle-box h1 { margin-bottom: 4px; }
+  .angle-row { display: flex; align-items: center; gap: 8px; }
+  .angle-row input { flex: 1; touch-action: none; }
+  .angle-ends { display: flex; justify-content: space-between; gap: 8px; margin-top: 2px; font-size: 11px; color: #777; }
+
+  /* ---------- 右上：吹力偵測 ---------- */
+  #meter-panel {
+    position: absolute; top: 8px; right: 8px; z-index: 10; width: 420px; max-width: calc(100vw - 16px);
+    display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px;
+    background: rgba(255,255,255,.9); border-radius: 16px; padding: 6px 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  }
+  #meter-title { display: flex; gap: 6px; font-size: 12px; font-weight: bold; color: #555; margin: 0; white-space: nowrap; }
+  #meter-track { position: relative; flex: 1; min-width: 70px; height: 18px; background: #e6e6e6; border: 2px solid #d5d5d5; border-radius: 11px; overflow: hidden; }
+  #meter-fill { height: 100%; width: 0; background: linear-gradient(90deg,#7fd8a4,#a3e7c0); border-radius: 11px 0 0 11px; }
+  #meter-fill.blowing { background: linear-gradient(90deg,#ff9a3c,#ff4d4d); }
+  #threshold-mark { position: absolute; top: 0; bottom: 0; left: 25%; width: 2px; background: #444; z-index: 1; }
+  #mic-status { order: 5; flex: 1 1 100%; margin: 0; font-size: 11px; color: #777; text-align: left; line-height: 1.3; }
+  #mic-btn {
+    margin: 0; width: auto; padding: 6px 10px; border: none; border-radius: 10px;
+    background: #4a90e2; color: #fff; font-weight: bold; font-size: 13px; cursor: pointer;
+  }
+  #sens-row { margin: 0; flex: 1 1 110px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #666; }
+  #sens-row input { flex: 1; }
+
+  #hint {
+    position: absolute; left: 290px; right: 10px; bottom: 12px; width: fit-content; margin: 0 auto; z-index: 10;
+    background: rgba(255,255,255,.88); border-radius: 18px; padding: 8px 16px;
+    font-size: 13px; color: #666; text-align: center; max-width: calc(100vw - 300px);
+    box-shadow: 0 2px 6px rgba(0,0,0,.1);
+  }
+  #toast {
+    position: absolute; left: 50%; bottom: 70px; transform: translateX(-50%); z-index: 20;
+    background: rgba(50,50,50,.88); color: #fff; padding: 8px 16px; border-radius: 16px;
+    font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+  @media (max-width: 700px) { #hint { display: none; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="paint"></canvas>
+  <canvas id="live"></canvas>
+  <canvas id="over"></canvas>
+
+  <div id="palette">
+    <div id="pal-grip">⠿ 按住這裡拖曳移動 ⠿</div>
+    <h1>🌈 七彩調色盤</h1>
+    <div id="swatches"></div>
+    <h1>🖼️ 畫布背景選擇</h1>
+    <div class="actions" id="bg-group" style="margin-bottom:8px">
+      <button class="btn active" data-bg="blank">⬜ 空白畫布</button>
+      <button class="btn" data-bg="hedgehog">🦔 小刺蝟</button>
+      <button class="btn" data-bg="person">👤 百變髮型人物</button>
+      <button class="btn" data-bg="bubble">🫧 吹泡泡小孩</button>
+    </div>
+    <h1>🎭 情緒表情</h1>
+    <div class="actions" id="emo-group" style="margin-bottom:8px">
+      <button class="btn active" data-emo="happy">😊 開心</button>
+      <button class="btn" data-emo="angry">😠 生氣</button>
+      <button class="btn" data-emo="sad">😢 難過</button>
+      <button class="btn" data-emo="surprise">😲 驚訝</button>
+      <button class="btn" data-emo="scared">😨 害怕</button>
+    </div>
+    <div id="angle-box">
+      <h1>📐 吸管角度調整　<b id="angle-val">45°</b></h1>
+      <div class="angle-row">
+        <svg width="46" height="30" viewBox="0 0 46 30" aria-hidden="true">
+          <line x1="2" y1="26" x2="44" y2="26" stroke="#aaa" stroke-width="3" stroke-linecap="round"/>
+          <line id="straw-line" x1="10" y1="26" x2="30" y2="10" stroke="#4a90e2" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <input type="range" id="angle" min="15" max="90" step="1" value="45">
+      </div>
+      <div class="angle-ends"><span>🌊 低角度（大面積粗墨）</span><span>🌿 高角度（細緻樹枝）</span></div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="clear">🔄 清除重來</button>
+      <button class="btn" id="save">💾 儲存作品</button>
+    </div>
+  </div>
+
+  <div id="meter-panel">
+    <div id="meter-title"><span>🎤 吹力偵測</span><span id="meter-val">0</span></div>
+    <div id="meter-track"><div id="threshold-mark"></div><div id="meter-fill"></div></div>
+    <div id="mic-status">尚未啟用麥克風</div>
+    <button id="mic-btn">▶️ 開啟麥克風</button>
+    <div id="sens-row"><span>靈敏度</span><input type="range" id="sens" min="1" max="10" step="1" value="5"></div>
+  </div>
+
+  <div id="hint">① 選顏色　② 移動滑鼠，箭頭會指向方向　③ 按住不放，水滴越變越大　④ 對麥克風吹氣，水痕順箭頭衝出去（按住時拖曳可調整方向）　⑤ 調「吸管角度」改變墨水的粗細與形狀</div>
+  <div id="toast"></div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const COLORS = [
+    { n: '紅', c: '#ff4d4d' }, { n: '橙', c: '#ff944d' }, { n: '黃', c: '#ffee4d' },
+    { n: '綠', c: '#4dff4d' }, { n: '藍', c: '#4d94ff' }, { n: '靛', c: '#4d4dff' },
+    { n: '紫', c: '#b54dff' },
+    { n: '🤎 咖啡色', c: '#8b5a2b', dark: true }, { n: '🖤 黑色', c: '#1a1a1a', dark: true }
+  ];
+  const BG = '#fcfaf2';
+  const THRESH = 25;          // 吹氣門檻（音量 > 25）
+  const LAYER_ALPHA = 0.88;   // 水彩半透明度（live 層 CSS opacity 與合成時一致）
+  const MAXR = 56;            // 水滴最大半徑
+  const TAU = Math.PI * 2;
+
+  const $ = id => document.getElementById(id);
+  const stage = $('stage'), paintC = $('paint'), liveC = $('live'), overC = $('over');
+  const pctx = paintC.getContext('2d'), lctx = liveC.getContext('2d'), octx = overC.getContext('2d');
+  let W = 0, H = 0, DPR = 1;
+
+  let colorIdx = 0, pressed = false, session = null, layerDirty = false, aim = -0.6;
+  const tendrils = [];
+  let bgKind = 'blank';
+  const pointer = { x: 0, y: 0, inside: false };
+  const lastMove = { x: 0, y: 0, has: false };
+
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  const wrapPi = a => { while (a > Math.PI) a -= TAU; while (a < -Math.PI) a += TAU; return a; };
+  const lerpAngle = (a, b, t) => a + wrapPi(b - a) * t;
+
+  // ---------------- 調色盤 ----------------
+  const sw = $('swatches');
+  COLORS.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.className = 'swatch' + (i === 0 ? ' active' : '') + (c.dark ? ' dark' : '');
+    b.style.background = c.c; b.title = c.n; b.setAttribute('aria-label', c.n);
+    b.addEventListener('click', () => {
+      colorIdx = i;
+      [...sw.children].forEach((x, j) => x.classList.toggle('active', j === i));
+    });
+    sw.appendChild(b);
+  });
+
+  let toastTimer = null;
+  function toast(msg, ms) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2200);
+  }
+
+  // ---------------- 畫布 ----------------
+  function fillBg() {
+    pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0);
+    pctx.globalCompositeOperation = 'source-over'; pctx.globalAlpha = 1;
+    pctx.fillStyle = BG; pctx.fillRect(0, 0, paintC.width, paintC.height);
+    pctx.restore();
+  }
+  function clearLive() {
+    lctx.save(); lctx.setTransform(1, 0, 0, 1, 0, 0);
+    lctx.clearRect(0, 0, liveC.width, liveC.height); lctx.restore();
+    layerDirty = false;
+  }
+  // 把「這一次吹畫」的圖層用 multiply 疊到畫紙上 → 與舊顏色自然混色
+  function commitLive() {
+    if (!layerDirty) return;
+    pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0);
+    pctx.globalCompositeOperation = 'multiply'; pctx.globalAlpha = LAYER_ALPHA;
+    pctx.drawImage(liveC, 0, 0);
+    pctx.restore();
+    clearLive();
+  }
+  function finishAll() {
+    if (session) session.head = null;
+    let guard = 0;
+    while (tendrils.length && guard++ < 800) updateChildren(1);
+  }
+  function flushSession() { finishAll(); commitLive(); session = null; }
+
+  function resize() {
+    const nw = stage.clientWidth, nh = stage.clientHeight;
+    if (!nw || !nh) return;
+    const d = Math.min(2, window.devicePixelRatio || 1);
+    if (nw === W && nh === H && d === DPR) return;   // 尺寸沒變就不動畫布，避免誤中斷按住中的創作
+    finishAll(); commitLive();                        // 保留按住中的 session，只把已畫的墨水先定稿
+    let old = null;
+    if (W > 0) {
+      old = document.createElement('canvas');
+      old.width = paintC.width; old.height = paintC.height;
+      old.getContext('2d').drawImage(paintC, 0, 0);
+    }
+    W = nw; H = nh; DPR = d;
+    if (session) session.drawnR = undefined;   // 縮放後重畫水滴
+    for (const c of [paintC, liveC, overC]) { c.width = Math.round(W * d); c.height = Math.round(H * d); }
+    pctx.setTransform(d, 0, 0, d, 0, 0);
+    lctx.setTransform(d, 0, 0, d, 0, 0);
+    octx.setTransform(d, 0, 0, d, 0, 0);
+    fillBg();
+    if (old) {
+      pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0); pctx.drawImage(old, 0, 0); pctx.restore();
+    }
+  }
+  window.addEventListener('resize', resize);
+
+  $('clear').addEventListener('click', () => {
+    tendrils.length = 0; session = null; clearLive(); fillBg(); drawTemplate(bgKind);
+  });
+  $('save').addEventListener('click', () => {
+    flushSession();
+    paintC.toBlob(blob => {
+      if (!blob) { toast('儲存失敗，請改用螢幕截圖'); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = '七彩吹畫作品.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      toast('💾 作品已儲存（PNG）');
+    }, 'image/png');
+  });
+
+  // ---------------- 造型畫布背景：線稿直接畫進畫紙本體 → 「儲存作品」的 PNG 會一起輸出 ----------------
+  // 全部用 Canvas 路徑繪製，不使用任何外部圖片，離線也能正常顯示。
+  const tplC = document.createElement('canvas');
+  const TPL_ALPHA = 0.45;   // 線稿不透明度（0.35~0.5）
+  let emotion = 'happy';
+  const EMO = {   // br：眉頭下壓(+)／上揚(−)　up：眉毛上提　m：嘴角(+笑 −苦；0=張嘴)　o：張嘴大小　ps：瞳孔縮放
+    happy: { br: 0, up: 0, m: 1, o: 1, ps: 1, tear: 0, hint: '😊 開心：用七彩顏色吹出蓬鬆、向上飛揚的頭髮／刺！' },
+    angry: { br: 16, up: 0, m: -0.5, o: 1, ps: 1, tear: 0, hint: '😠 生氣：用紅色、橘色吹出又直又尖、往上豎起來！' },
+    sad: { br: -13, up: 4, m: -1, o: 1, ps: 1, tear: 1, hint: '😢 難過：用藍色、靛色吹出往下垂的長髮／刺！' },
+    surprise: { br: 0, up: -16, m: 0, o: 1, ps: 0.6, tear: 0, hint: '😲 驚訝：用黃色、橘色吹出爆炸般散開的頭髮／刺！' },
+    scared: { br: -12, up: -10, m: 0, o: 0.55, ps: 0.5, tear: 0, hint: '😨 害怕：用紫色、深藍吹出細細抖動、四面亂翹的頭髮／刺！' }
+  };
+
+  function drawHedgehog(t) {          // 小刺蝟：朝右、身體沒有刺，背上留給學生吹出彩色的刺
+    const fs = () => { t.fill(); t.stroke(); };
+    [[-85, 120], [65, 124]].forEach(([x, y]) => { t.beginPath(); t.ellipse(x, y, 38, 22, 0, 0, TAU); fs(); });  // 腳
+    t.beginPath(); t.ellipse(-205, 45, 24, 15, -0.5, 0, TAU); fs();                                            // 尾巴
+    t.beginPath(); t.ellipse(-25, -5, 185, 130, 0, 0, TAU); fs();                                              // 身體
+    t.beginPath(); t.ellipse(118, -74, 22, 27, 0.2, 0, TAU); fs();                                             // 耳朵
+    t.beginPath(); t.ellipse(118, -72, 11, 15, 0.2, 0, TAU); t.stroke();
+    t.beginPath(); t.moveTo(110, -75);                                                                         // 臉
+    t.bezierCurveTo(165, -85, 235, -25, 266, 25);
+    t.bezierCurveTo(246, 56, 190, 100, 120, 98);
+    t.bezierCurveTo(95, 70, 95, -40, 110, -75);
+    t.closePath(); fs();
+    t.fillStyle = '#444';
+    t.beginPath(); t.arc(190, -8, 8, 0, TAU); t.fill();                                                        // 眼睛
+    t.beginPath(); t.arc(266, 26, 10, 0, TAU); t.fill();                                                       // 鼻子
+    t.fillStyle = BG;
+    t.beginPath(); t.arc(193, -11, 2.8, 0, TAU); t.fill();                                                     // 眼睛反光
+    { const E = EMO[emotion], m = E.m, oy = -32 + E.up - E.br * 0.4, iy = -32 + E.up + E.br;
+    t.beginPath();
+    if (m === 0) { t.ellipse(236, 72, 9 * E.o, 13 * E.o, 0, 0, TAU); fs(); } else { t.moveTo(214, 66); t.quadraticCurveTo(232, 66 + 22 * m, 250, 62); t.stroke(); }
+    t.beginPath(); t.moveTo(172, oy); t.quadraticCurveTo(190, (oy + iy) / 2 - (E.br ? 2 : 10), 208, iy); t.stroke();
+    if (E.tear) { t.beginPath(); t.ellipse(192, 30, 5, 8, 0, 0, TAU); fs(); } }                        // 嘴巴
+    t.lineWidth = 2.5;
+    t.beginPath(); t.ellipse(172, 42, 14, 9, 0, 0, TAU); t.stroke();                                           // 臉頰
+  }
+
+  function drawPerson(t) {            // 光頭動漫人物：正面、沒有頭髮，頭頂周圍留給學生吹出爆炸頭／長髮
+    const fs = () => { t.fill(); t.stroke(); };
+    t.beginPath(); t.rect(-34, 100, 68, 75); fs();                                                             // 脖子
+    t.beginPath(); t.moveTo(-200, 290); t.bezierCurveTo(-200, 200, -120, 172, -38, 160);                       // 肩膀
+    t.quadraticCurveTo(0, 185, 38, 160); t.bezierCurveTo(120, 172, 200, 200, 200, 290); t.closePath(); fs();
+    t.beginPath(); t.moveTo(-26, 168); t.lineTo(0, 215); t.lineTo(26, 168); t.stroke();                        // 領口
+    [-1, 1].forEach(sx => {                                                                                    // 耳朵
+      t.beginPath(); t.ellipse(sx * 122, -5, 22, 30, 0, 0, TAU); fs();
+      t.beginPath(); t.ellipse(sx * 124, -5, 10, 16, 0, 0, TAU); t.stroke();
+    });
+    t.beginPath(); t.ellipse(0, -25, 120, 140, 0, 0, TAU); fs();                                               // 光頭
+    t.lineWidth = 4;
+    t.beginPath(); t.moveTo(-70, -112); t.quadraticCurveTo(-48, -135, -18, -142); t.stroke();                  // 頭頂反光
+    [-1, 1].forEach(sx => {
+      const x = sx * 48, y = -10;
+      t.lineWidth = 4.5;
+      t.beginPath(); t.ellipse(x, y, 23, 31, 0, 0, TAU); fs();                                                 // 大眼睛
+      t.fillStyle = '#444'; t.beginPath(); t.ellipse(x, y + 4, 14 * EMO[emotion].ps, 21 * EMO[emotion].ps, 0, 0, TAU); t.fill();                   // 瞳孔
+      t.fillStyle = BG;
+      t.beginPath(); t.arc(x - 6, y - 6, 5, 0, TAU); t.fill();
+      t.beginPath(); t.arc(x + 7, y + 12, 2.5, 0, TAU); t.fill();
+      t.lineWidth = 5;
+      const E = EMO[emotion], oy = -58 + E.up - E.br * 0.4, iy = -58 + E.up + E.br;
+      t.beginPath(); t.moveTo(x + sx * 26, oy); t.quadraticCurveTo(x, (oy + iy) / 2 - (E.br ? 3 : 14), x - sx * 26, iy); t.stroke();
+      if (E.tear) { t.lineWidth = 3; t.beginPath(); t.ellipse(x + sx * 8, y + 46, 5, 8, 0, 0, TAU); fs(); }               // 眉毛
+      t.lineWidth = 2.5;
+      t.beginPath(); t.ellipse(sx * 82, 48, 16, 9, 0, 0, TAU); t.stroke();                                     // 臉頰
+    });
+    t.lineWidth = 4;
+    t.beginPath(); t.moveTo(0, 22); t.lineTo(-5, 38); t.lineTo(5, 40); t.stroke();                             // 鼻子
+    { const E = EMO[emotion], m = E.m; t.beginPath();
+      if (m === 0) { t.ellipse(0, 88, 14 * E.o, 19 * E.o, 0, 0, TAU); fs(); } else { t.moveTo(-30, 80); t.quadraticCurveTo(0, 80 + 26 * m, 30, 80); t.stroke(); } }                           // 微笑
+  }
+
+  function drawBubbleKid(t) {         // 吹泡泡的小孩：跪坐朝右、手拿泡泡棒，圈圈前方留給學生吹出泡泡
+    const fs = () => { t.fill(); t.stroke(); };
+    const tube = (pts, w) => {
+      const p = () => { t.beginPath(); t.moveTo(pts[0][0], pts[0][1]); pts.slice(1).forEach(q => t.lineTo(q[0], q[1])); };
+      t.lineWidth = w + 4.5; p(); t.strokeStyle = '#444'; t.stroke();
+      t.lineWidth = w; p(); t.strokeStyle = BG; t.stroke();
+      t.strokeStyle = '#444'; t.lineWidth = 4.5;
+    };
+    t.beginPath(); t.ellipse(-100, 178, 72, 20, 0, 0, TAU); fs();                      // 腳
+    t.beginPath(); t.ellipse(-10, 125, 108, 58, 0, 0, TAU); fs();                      // 裙子／跪坐的腿
+    t.beginPath(); t.ellipse(-38, -128, 20, 38, -0.9, 0, TAU); fs();                   // 馬尾
+    t.beginPath(); t.ellipse(10, 22, 62, 102, 0.12, 0, TAU); fs();                     // 身體
+    tube([[0, -5], [-12, 55], [38, 88]], 26);                                          // 放在膝蓋上的手
+    t.beginPath(); t.arc(45, -110, 62, 0, TAU); fs();                                  // 頭
+    t.beginPath(); t.moveTo(-10, -120); t.quadraticCurveTo(45, -165, 100, -115); t.stroke();   // 瀏海
+    t.fillStyle = '#444'; t.beginPath(); t.arc(72, -108, 5, 0, TAU); t.fill(); t.fillStyle = BG;   // 眼睛
+    t.lineWidth = 2.5; t.beginPath(); t.ellipse(66, -88, 12, 8, 0, 0, TAU); t.stroke(); t.lineWidth = 4.5;   // 臉頰
+    t.beginPath(); t.ellipse(93, -84, 5, 7, 0, 0, TAU); fs();                          // 噘起的嘴
+    tube([[30, -20], [92, 30], [118, -42]], 28);                                       // 拿泡泡棒的手臂
+    t.lineWidth = 5; t.beginPath(); t.moveTo(138, -64); t.lineTo(110, -14); t.stroke();   // 棒子
+    t.lineWidth = 4; t.beginPath(); t.arc(146, -88, 24, 0, TAU); t.stroke(); t.lineWidth = 4.5;   // 泡泡圈
+    t.beginPath(); t.arc(120, -42, 16, 0, TAU); fs();                                  // 手
+    t.save(); t.strokeStyle = '#8cc9ec'; t.lineWidth = 3;                              // 泡泡位置提示
+    [[195, -120, 20], [235, -165, 13], [190, -175, 9]].forEach(b => { t.beginPath(); t.arc(b[0], b[1], b[2], 0, TAU); t.stroke(); });
+    t.restore();
+  }
+
+  function drawTemplate(kind) {
+    if (kind === 'blank' || !W) return;
+    tplC.width = paintC.width; tplC.height = paintC.height;
+    const t = tplC.getContext('2d');
+    t.setTransform(DPR, 0, 0, DPR, 0, 0);
+    const s = Math.min(W / 700, H / 620);
+    const off = kind === 'hedgehog' ? Math.max(H * 0.15 + 20, H / 2 - 150 * s)       // 讓圖案貼近畫布下緣，上方留給學生吹
+      : kind === 'bubble' ? H / 2 - 205 * s : Math.max(H * 0.15 - 25, H / 2 - 285 * s);
+    t.translate(W / 2, H / 2 + off);
+    t.scale(s, s);
+    t.lineWidth = 4.5; t.lineJoin = 'round'; t.lineCap = 'round';
+    t.strokeStyle = '#444'; t.fillStyle = BG;
+    kind === 'hedgehog' ? drawHedgehog(t) : kind === 'bubble' ? drawBubbleKid(t) : drawPerson(t);
+    // 先在獨立圖層用實色畫完（遮擋才乾淨），再以半透明疊到畫紙上
+    pctx.save(); pctx.setTransform(1, 0, 0, 1, 0, 0);
+    pctx.globalCompositeOperation = 'source-over'; pctx.globalAlpha = TPL_ALPHA;
+    pctx.drawImage(tplC, 0, 0);
+    pctx.restore();
+  }
+
+  function setBackground(kind) {
+    flushSession(); tendrils.length = 0; clearLive();
+    fillBg(); bgKind = kind; drawTemplate(kind);
+    document.querySelectorAll('#bg-group .btn').forEach(b => b.classList.toggle('active', b.dataset.bg === kind));
+    toast(kind === 'hedgehog' ? '🦔 ' + EMO[emotion].hint
+        : kind === 'person' ? '👤 ' + EMO[emotion].hint
+        : kind === 'bubble' ? '🫧 在泡泡圈前按住滴水，朝右上吹出一串彩色泡泡！'
+        : '⬜ 已切換為空白畫布', 4000);
+  }
+  document.querySelectorAll('#bg-group .btn').forEach(b => b.addEventListener('click', () => setBackground(b.dataset.bg)));
+  document.querySelectorAll('#emo-group .btn').forEach(b => b.addEventListener('click', () => {
+    emotion = b.dataset.emo;
+    document.querySelectorAll('#emo-group .btn').forEach(x => x.classList.toggle('active', x === b));
+    if (bgKind === 'blank') { toast('請先選擇「小刺蝟」或「百變髮型人物」背景'); return; }
+    setBackground(bgKind);   // 換表情會重畫畫布
+  }));
+
+  // ---- 調色盤可拖曳：按住面板空白處或頂端把手即可移動，預設在左下角 ----
+  const pal = $('palette');
+  const palMove = (x, y) => {
+    const vw = pal.offsetWidth * 0.5, vh = pal.offsetHeight * 0.5;
+    pal.style.left = Math.max(0, Math.min(stage.clientWidth - vw, x)) + 'px';
+    pal.style.top = Math.max(0, Math.min(stage.clientHeight - vh, y)) + 'px';
+  };
+  palMove(8, stage.clientHeight - pal.offsetHeight * 0.5 - 8);
+  let palDrag = null;
+  pal.addEventListener('pointerdown', e => {
+    if (e.target.closest('button, input')) return;
+    palDrag = { dx: e.clientX - pal.offsetLeft, dy: e.clientY - pal.offsetTop };
+    pal.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  pal.addEventListener('pointermove', e => { if (palDrag) palMove(e.clientX - palDrag.dx, e.clientY - palDrag.dy); });
+  ['pointerup', 'pointercancel'].forEach(n => pal.addEventListener(n, () => { palDrag = null; }));
+  window.addEventListener('resize', () => palMove(pal.offsetLeft, pal.offsetTop));
+
+  // ---------------- 麥克風 / 音量（唯一的吹力來源） ----------------
+  let vol = 0, micReady = false, analyser = null, buf = null, audioCtx = null;
+  let calib = false, calibT0 = 0, calibSum = 0, calibN = 0, baseDb = -60;
+  let sens = 5, simOn = false, spaceDown = false, simLevel = 0;
+  const meterFill = $('meter-fill'), meterVal = $('meter-val'), micStatus = $('mic-status'), micBtn = $('mic-btn');
+
+  $('sens').addEventListener('input', e => { sens = +e.target.value; });
+
+  function startCalibration() {
+    calib = true; calibT0 = performance.now(); calibSum = 0; calibN = 0;
+    micStatus.textContent = '🔇 校正環境音中…請先保持安靜';
+  }
+  async function startMic() {
+    try {
+      micStatus.textContent = '正在請求麥克風權限…';
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      const src = audioCtx.createMediaStreamSource(stream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024; analyser.smoothingTimeConstant = 0;
+      src.connect(analyser);
+      buf = new Float32Array(analyser.fftSize);
+      micReady = true; simOn = false;
+      micBtn.textContent = '🎚️ 重新校正環境音';
+      startCalibration();
+    } catch (err) {
+      simOn = true;
+      micStatus.textContent = '⚠️ 無法使用麥克風（' + (err && err.name ? err.name : '錯誤') + '）。可改用「按住空白鍵」模擬吹氣（按越久越大聲）';
+    }
+  }
+  micBtn.addEventListener('click', () => { micReady ? startCalibration() : startMic(); });
+  window.addEventListener('keydown', e => { if (e.code === 'Space') { spaceDown = true; if (simOn) e.preventDefault(); } });
+  window.addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
+
+  function updateVolume(dt) {
+    let target = 0;
+    if (micReady) {
+      analyser.getFloatTimeDomainData(buf);
+      let s = 0;
+      for (let i = 0; i < buf.length; i++) s += buf[i] * buf[i];
+      const rms = Math.sqrt(s / buf.length);
+      const db = 20 * Math.log10(Math.max(rms, 1e-5));
+      if (calib) {
+        calibSum += db; calibN++;
+        if (performance.now() - calibT0 > 1200) {
+          baseDb = Math.max(-75, calibSum / calibN); calib = false;
+          micStatus.textContent = '✅ 麥克風就緒：按住畫布，再對著麥克風吹氣';
+        }
+      } else {
+        const span = 70 - 6 * sens;           // 靈敏度越高，越小的聲音就能到達滿格
+        const floorDb = baseDb + 6;           // 環境音再高一點點才算有聲音
+        target = Math.max(0, Math.min(100, (db - floorDb) / span * 100));
+      }
+    } else if (simOn) {
+      simLevel = spaceDown ? Math.min(100, simLevel + 70 * dt) : Math.max(0, simLevel - 250 * dt);
+      target = simLevel;
+    }
+    vol += (target - vol) * (target > vol ? 0.6 : 0.2);
+    meterVal.textContent = Math.round(vol);
+    meterFill.style.width = vol + '%';
+    meterFill.classList.toggle('blowing', vol > THRESH);
+  }
+
+  // ---------------- 游標：吸管位置 + 風向箭頭方向 ----------------
+  function pos(e) {
+    const r = overC.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  function makeBlob() {
+    const n = 36;
+    let a = Array.from({ length: n }, () => Math.random());
+    for (let k = 0; k < 3; k++) a = a.map((v, i) => (a[(i + n - 1) % n] + v * 2 + a[(i + 1) % n]) / 4);
+    const mn = Math.min(...a), mx = Math.max(...a);
+    return a.map(v => (v - mn) / ((mx - mn) || 1));
+  }
+  function newSession(x, y) {
+    return { x, y, r: 4, color: COLORS[colorIdx].c, blob: makeBlob(), head: null };
+  }
+  function down(e) {
+    e.preventDefault();
+    try { overC.setPointerCapture(e.pointerId); } catch (_) {}
+    const p = pos(e);
+    pointer.x = p.x; pointer.y = p.y; pointer.inside = true;
+    lastMove.x = p.x; lastMove.y = p.y; lastMove.has = true;
+    flushSession();
+    pressed = true;
+    session = newSession(p.x, p.y);
+  }
+  function move(e) {
+    const p = pos(e);
+    pointer.x = p.x; pointer.y = p.y; pointer.inside = true;
+    if (pressed && session) {
+      // 按住時：從水滴指向游標的方向 = 箭頭方向（只決定方向，距離長短完全不影響遠近）
+      const dx = p.x - session.x, dy = p.y - session.y;
+      if (Math.hypot(dx, dy) > 6) aim = lerpAngle(aim, Math.atan2(dy, dx), 0.6);
+    } else if (lastMove.has) {
+      const dx = p.x - lastMove.x, dy = p.y - lastMove.y;
+      if (Math.hypot(dx, dy) > 4) {
+        aim = lerpAngle(aim, Math.atan2(dy, dx), 0.3);
+        lastMove.x = p.x; lastMove.y = p.y;
+      }
+    } else { lastMove.x = p.x; lastMove.y = p.y; lastMove.has = true; }
+  }
+  function up(e) {
+    pressed = false;
+    if (session) session.head = null;   // 放開 = 吸管離開，主水流停止，細分支自己流完
+    session = null;
+    if (e && e.pointerType === 'touch') pointer.inside = false;
+  }
+  overC.addEventListener('pointerdown', down);
+  overC.addEventListener('pointermove', move);
+  overC.addEventListener('pointerup', up);
+  overC.addEventListener('pointercancel', up);
+  overC.addEventListener('pointerleave', () => { if (!pressed) pointer.inside = false; });
+
+  // ---------------- 吸管角度（15°~90°）→ 墨水外觀 ----------------
+  // 低角度：風與紙面平行、推力大 → 主幹極寬極厚、整片蔓延，兩側有短的片狀噴濺
+  // 高角度：風直射紙面 → 主幹極細，從水滴邊緣放射出許多細長、多分支的樹枝
+  const tilt = { deg: 45, t: 0.4, widthMul: 1.4, Rmul: 1.1, spMul: 1.1, flakeChance: 0.2, branchChance: 0.27, maxDepth: 2, fanHalf: 0.6, rayRate: 0.3 };
+  function applyAngle(deg) {
+    const t = clamp01((deg - 15) / 75), L = 1 - t;
+    tilt.deg = deg; tilt.t = t;
+    tilt.widthMul = 4.5 * Math.exp(Math.log(0.25 / 4.5) * t);   // 15°≈4.5 倍粗 → 90°≈0.25 倍（極細）
+    tilt.Rmul = 1.35 - 0.5 * t;                                 // 低角度推力大、衝得更遠
+    tilt.spMul = 1.25 - 0.35 * t;
+    tilt.flakeChance = 0.6 * Math.pow(L, 1.4);                  // 主幹兩側的片狀噴濺機率
+    tilt.branchChance = 0.15 + 0.3 * t;                         // 高角度：分支更多（低角度維持 15%）
+    tilt.maxDepth = t > 0.55 ? 3 : 2;                           // 高角度：樹枝可再分更多層
+    tilt.fanHalf = 0.25 + 0.9 * t;                              // 高角度：放射範圍更寬
+    tilt.rayRate = Math.pow(t, 1.2);                            // 高角度：放射細枝的機率
+    $('angle-val').textContent = Math.round(deg) + '°';
+    const rad = deg * Math.PI / 180, sl = $('straw-line');
+    sl.setAttribute('x2', (10 + 30 * Math.cos(rad)).toFixed(1));
+    sl.setAttribute('y2', (26 - 22 * Math.sin(rad)).toFixed(1));
+  }
+  const angleInput = $('angle');
+  angleInput.addEventListener('input', () => applyAngle(+angleInput.value));
+  applyAngle(+angleInput.value);
+
+  // ---------------- 流體水痕 ----------------
+  function makeTendril(x, y, angle, color, depth, main) {
+    return { x, y, angle, av: 0, D: 0, w0: 3, w: 3, wn: 1, color, depth, main, reach: 30, speed: 5, since: 0 };
+  }
+
+  const MAX_TENDRILS = 380;
+  function maybeBranch(t, R, p) {
+    if (tendrils.length >= MAX_TENDRILS) return;
+    // 低角度：主幹兩側伴隨「短、寬、很快收尖」的片狀噴濺
+    if (t.main && Math.random() < tilt.flakeChance) {
+      const side = Math.random() < 0.5 ? -1 : 1, off = t.w * 0.4 * side;
+      const f = makeTendril(t.x + Math.cos(t.angle + Math.PI / 2) * off, t.y + Math.sin(t.angle + Math.PI / 2) * off,
+                            t.angle + side * (0.5 + Math.random() * 0.8), t.color, 2, false);
+      f.reach = 8 + Math.random() * (22 + 0.1 * R);
+      f.w0 = Math.max(1.5, t.w * (0.28 + Math.random() * 0.25));
+      f.w = f.w0; f.speed = 3 + Math.random() * 4;
+      tendrils.push(f);
+    }
+    // 一般分支：低角度維持 15%，角度越高機率與層數越高（樹枝狀）
+    if (t.depth >= tilt.maxDepth || p < 0.28) return;
+    if (Math.random() >= tilt.branchChance) return;
+    const side = Math.random() < 0.5 ? -1 : 1;
+    const c = makeTendril(t.x, t.y, t.angle + side * (0.35 + Math.random() * 0.85), t.color, t.depth + 1, false);
+    const remaining = Math.max(0, R - t.D);
+    c.reach = Math.max(10, remaining * (0.35 + Math.random() * 0.7) + 8 + (t.depth === 0 ? R * 0.04 : 0));
+    c.w0 = Math.max(0.5, t.w * (0.4 + Math.random() * 0.25));
+    c.w = c.w0;
+    c.speed = 2.5 + Math.random() * 4;
+    tendrils.push(c);
+  }
+
+  // 沿著目前方向前進 dist 像素：細步進、方向慢慢彎、末端越來越不規則、越走越細越淡
+  function advance(t, dist, R) {
+    const n = Math.max(1, Math.ceil(dist / 3.5)), sl = dist / n, k = sl / 3.5;
+    for (let i = 0; i < n; i++) {
+      if (t.D >= R) break;
+      const p = t.D / R;
+      if (t.main) t.angle += wrapPi(aim - t.angle) * 0.07 * k;       // 主水流順著箭頭
+      t.av += (Math.random() - 0.5) * (0.06 + 0.34 * p * p) * k;     // 末端亂流變大
+      t.av *= Math.pow(0.9, k);
+      if (t.av > 0.28) t.av = 0.28; else if (t.av < -0.28) t.av = -0.28;
+      t.angle += t.av * k;
+
+      const nx = t.x + Math.cos(t.angle) * sl, ny = t.y + Math.sin(t.angle) * sl;
+      const target = Math.max(0.45, t.w0 * Math.pow(1 - p, 0.85));    // 由粗漸變到細：隨距離／能量衰減，流暢收尖
+      t.w += (target - t.w) * 0.3;
+      t.wn += (Math.random() - 0.5) * 0.14 * k;                        // 邊緣微微起伏（水流感）
+      if (t.wn > 1.18) t.wn = 1.18; else if (t.wn < 0.82) t.wn = 0.82;
+      const a = p < 0.55 ? 1 : 1 - (p - 0.55) / 0.45 * 0.65;          // 尾端漸漸變淡
+
+      lctx.globalAlpha = a; lctx.strokeStyle = t.color; lctx.lineWidth = Math.max(0.4, t.w * t.wn);
+      lctx.lineCap = 'round'; lctx.lineJoin = 'round';
+      lctx.beginPath(); lctx.moveTo(t.x, t.y); lctx.lineTo(nx, ny); lctx.stroke();
+      lctx.globalAlpha = 1; layerDirty = true;
+
+      t.x = nx; t.y = ny; t.D += sl;
+      t.since += sl;
+      if (t.since >= 12) { t.since -= 12; maybeBranch(t, R, t.D / R); }
+    }
+  }
+
+  function updateChildren(f) {
+    for (let i = tendrils.length - 1; i >= 0; i--) {
+      const t = tendrils[i];
+      if (t.D >= t.reach || t.x < -120 || t.x > W + 120 || t.y < -120 || t.y > H + 120) {
+        tendrils.splice(i, 1); continue;
+      }
+      const p = t.D / t.reach;
+      advance(t, t.speed * (0.3 + 0.7 * (1 - p)) * f, t.reach);
+    }
+  }
+
+  // 水彩暈染：把同一個不規則水滴由大到小疊 6 層半透明（最外層最淡），邊緣自然羽化、像水彩滴在紙上暈開。
+  // 只在水滴長大 ≥2px 時才補畫，避免同一位置反覆疊加而變回硬邊。
+  const PUDDLE_LAYERS = [[1.14, 0.10], [1.06, 0.18], [1.0, 0.30], [0.93, 0.40], [0.85, 0.55], [0.7, 0.80]];
+  function drawPuddle(s) {
+    if (s.drawnR !== undefined && s.r < s.drawnR + 2) return;
+    s.drawnR = s.r;
+    const n = s.blob.length;
+    lctx.fillStyle = s.color;
+    for (const [k, a] of PUDDLE_LAYERS) {
+      lctx.globalAlpha = a; lctx.beginPath();
+      for (let i = 0; i <= n; i++) {
+        const ang = (i % n) / n * TAU, rr = s.r * k * (0.9 + 0.2 * s.blob[i % n]);
+        const x = s.x + Math.cos(ang) * rr, y = s.y + Math.sin(ang) * rr;
+        i ? lctx.lineTo(x, y) : lctx.moveTo(x, y);
+      }
+      lctx.closePath(); lctx.fill();
+    }
+    lctx.globalAlpha = 1; layerDirty = true;
+  }
+
+  // ---------------- 游標層：吸管、風向箭頭、水量 ----------------
+  function drawArrow(x, y, ang, off, len, col, k) {
+    octx.save(); octx.translate(x, y); octx.rotate(ang); octx.lineJoin = 'round';
+    const hw = 8, hh = 20, hl = 26;
+    octx.beginPath();
+    octx.moveTo(off, -hw); octx.lineTo(off + len - hl, -hw); octx.lineTo(off + len - hl, -hh);
+    octx.lineTo(off + len, 0);
+    octx.lineTo(off + len - hl, hh); octx.lineTo(off + len - hl, hw); octx.lineTo(off, hw);
+    octx.closePath();
+    octx.globalAlpha = k; octx.lineWidth = 6; octx.strokeStyle = 'rgba(255,255,255,.9)'; octx.stroke();   // 白色外框：任何底色都看得清楚
+    octx.globalAlpha = 0.8 * k; octx.fillStyle = col; octx.fill();
+    octx.globalAlpha = k; octx.lineWidth = 2; octx.strokeStyle = 'rgba(50,50,50,.85)'; octx.stroke();
+    octx.restore();
+  }
+  function drawStraw(x, y, col, k) {
+    octx.save(); octx.lineCap = 'round';
+    const th = tilt.deg * Math.PI / 180, ex = x + Math.cos(th) * 70, ey = y - Math.sin(th) * 70; octx.globalAlpha = k;
+    octx.beginPath(); octx.moveTo(x, y); octx.lineTo(ex, ey);
+    octx.lineWidth = 11; octx.strokeStyle = 'rgba(70,70,70,.55)'; octx.stroke();
+    octx.lineWidth = 8; octx.strokeStyle = col; octx.stroke();
+    octx.setLineDash([7, 9]); octx.strokeStyle = 'rgba(255,255,255,.85)'; octx.stroke(); octx.setLineDash([]);
+    octx.restore();
+  }
+  // 游標層：只有「按住」時才顯示吸管、風向箭頭、水量；放開後 0.8 秒內淡出到完全隱形
+  let ov = null, ovAlpha = 0;
+  function drawOverlay(power, dt) {
+    if (session) {
+      const s = session;
+      ov = { x: s.x, y: s.y, r: s.r, water: clamp01((s.r - 4) / (MAXR - 4)),
+             px: pointer.x, py: pointer.y, ang: aim, power, col: s.color };
+      ovAlpha = 1;   // 按住期間 100% 顯現
+    } else {
+      ovAlpha = Math.max(0, ovAlpha - dt / 0.8);
+    }
+    octx.clearRect(0, 0, W, H);
+    if (!ov || ovAlpha <= 0) return;
+    const k = ovAlpha;
+    octx.save(); octx.globalAlpha = k;
+    octx.fillStyle = 'rgba(255,255,255,.5)';
+    octx.beginPath(); octx.ellipse(ov.x - ov.r * 0.35, ov.y - ov.r * 0.38, ov.r * 0.2, ov.r * 0.12, -0.6, 0, TAU); octx.fill();
+    octx.fillStyle = '#555'; octx.font = 'bold 13px sans-serif'; octx.textAlign = 'center';
+    octx.fillText((ov.power > 0 ? '💨 吹氣中　' : '') + '💧 水量 ' + Math.round(ov.water * 100) + '%', ov.x, ov.y - ov.r - 12);
+    octx.restore();
+    drawArrow(ov.x, ov.y, ov.ang, ov.r + 6, 62 + ov.power * 70 + Math.sin(performance.now() / 220) * 5, ov.col, k);
+    drawStraw(ov.px, ov.py, ov.col, k);
+  }
+
+  // ---------------- 主迴圈 ----------------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const f = dt * 60;
+    updateVolume(dt);
+
+    const power = vol > THRESH ? clamp01((vol - THRESH) / (100 - THRESH)) : 0;
+    if (pressed && !session) session = newSession(pointer.x, pointer.y);
+    const blowing = pressed && session && power > 0;
+
+    if (session) {
+      const s = session;
+      // 沒有吹氣：吸管持續滴水，按越久水滴越大（水量累積）
+      if (!blowing) s.r += (MAXR - s.r) * (1 - Math.exp(-dt / 1.6));
+      const water = clamp01((s.r - 4) / (MAXR - 4));
+
+      if (blowing) {
+        if (!s.head) s.head = makeTendril(
+          s.x + Math.cos(aim) * s.r * 0.85, s.y + Math.sin(aim) * s.r * 0.85,
+          aim, s.color, 0, true);
+        const h = s.head;
+        // 遠近上限 R：由「音量(power)」「水量(water)」與吸管角度決定，與滑鼠移動無關
+        const R = Math.min(900, (60 + 640 * Math.pow(power, 1.3)) * (0.5 + 0.9 * water) * tilt.Rmul);
+        if (h.Rs === undefined) h.Rs = R; else h.Rs += (R - h.Rs) * Math.min(1, 0.12 * f);   // 平滑，收尾才不會突然截斷
+        // 主幹粗細：水越多、吹越用力越粗；低角度 ×4.5 極粗、高角度 ×0.25 極細
+        h.w0 = Math.min(70, Math.max(0.7, (1.5 + water * 8) * (0.5 + 0.8 * power) * tilt.widthMul));
+        if (!h.init) { h.w = h.w0; h.init = true; }   // 起點就是最粗
+        if (h.D < h.Rs) {
+          const p = h.D / h.Rs;
+          const sp = vol * 0.18 * tilt.spMul;   // 推力：每幀前進距離 ∝ 麥克風音量
+          advance(h, sp * (0.25 + 0.75 * (1 - p)) * f, h.Rs);
+          s.r = Math.max(3, s.r - (4 + 30 * power) * dt);   // 吹出去會消耗水量
+        }
+        // 高角度：風直射紙面 → 從水滴邊緣向外放射出許多細長的樹枝（長度仍由當下音量決定）
+        if (tilt.rayRate > 0 && tendrils.length < MAX_TENDRILS &&
+            Math.random() < tilt.rayRate * (0.05 + 0.2 * power) * f) {
+          const a = aim + (Math.random() + Math.random() - 1) * tilt.fanHalf;
+          const c = makeTendril(s.x + Math.cos(a) * s.r * 0.85, s.y + Math.sin(a) * s.r * 0.85, a, s.color, 1, false);
+          c.reach = Math.max(14, R * (0.35 + Math.random() * 0.65));
+          c.w0 = Math.max(0.6, (0.7 + water * 1.3) * (0.7 + 0.6 * power));
+          c.w = c.w0; c.speed = 3 + vol * 0.1;
+          tendrils.push(c);
+          s.r = Math.max(3, s.r - 0.3);
+        }
+      }
+      drawPuddle(s);
+    }
+
+    updateChildren(f);
+    if (!pressed && tendrils.length === 0 && layerDirty) commitLive();
+
+    drawOverlay(power, dt);
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
