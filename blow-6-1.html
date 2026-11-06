@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>七彩虹吸管吹畫 - 完整修復版</title>
+   
+<style>
+body {
+  margin: 0; padding: 0;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  background-color: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  user-select: none; -webkit-user-select: none;
+}
+canvas {
+  display: block; width: 100vw; height: 85vh;
+  background: #fff; box-sizing: border-box; cursor: crosshair;
+}
+#palette {
+  position: fixed; bottom: 0; left: 0;
+  width: 100vw; height: 15vh; z-index: 10;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 10px 20px; box-sizing: border-box;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.12);
+  display: flex; align-items: center;
+}
+#palette h1 { font-size: 13px; margin: 0 0 4px; color: #555; white-space: nowrap; }
+.section-block { display: flex; flex-direction: column; justify-content: center; }
+#swatches { display: flex; gap: 6px; }
+.swatch {
+  position: relative; width: 36px; height: 36px; border-radius: 50%;
+  border: 1.5px solid #fff; cursor: pointer; padding: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+  transition: transform .12s ease, box-shadow .12s ease; flex-shrink: 0;
+}
+.swatch::before {
+  content: ""; position: absolute; left: 8px; top: 10px; width: 4px; height: 4px;
+  background: #333; border-radius: 50%; box-shadow: 10px 0 0 #333;
+}
+.swatch::after {
+  content: ""; position: absolute; left: 9px; top: 16px; width: 8px; height: 4px;
+  border: 2px solid #333; border-top: none; border-radius: 0 0 8px 8px;
+}
+.swatch.dark::before { background: #fff; box-shadow: 10px 0 0 #fff; }
+.swatch.dark::after { border-color: #fff; }
+.swatch:active { transform: scale(.92); }
+.swatch.active { transform: scale(1.15); box-shadow: 0 0 0 2px #444, 0 2px 4px rgba(0,0,0,.18); }
+.actions { display: flex; align-items: center; gap: 6px; }
+.btn {
+  border: none; border-radius: 10px; padding: 6px 12px; font-weight: bold; font-size: 13px;
+  cursor: pointer; background: #fff; color: #444; box-shadow: 0 2px 5px rgba(0,0,0,.15);
+  white-space: nowrap;
+}
+.btn:active { transform: scale(.96); }
+.btn.active { background: #4a90e2; color: #fff; }
+#mic-indicator {
+  width: 8px; height: 8px; background: #ccc; border-radius: 50%;
+  display: inline-block; margin-left: 4px; transition: transform 0.05s ease;
+}
+#angle-box { min-width: 160px; }
+.angle-row { display: flex; align-items: center; gap: 6px; }
+.angle-row input { flex: 1; touch-action: none; }
+.angle-ends { display: flex; justify-content: space-between; font-size: 10px; color: #888; }
+.instruction-section { color: #666; line-height: 1.4; }
+.instruction-section ol { margin: 0; padding-left: 18px; }
+
+/* 🌟 修改：針對平板與手機「直式螢幕」的專屬排版優化 */
+@media (max-width: 1024px) and (orientation: portrait) {
+  canvas {
+    height: 78vh; 
+  }
+  #palette {
+    height: 22vh; 
+    flex-wrap: wrap; 
+    justify-content: flex-start; 
+    align-content: space-around; 
+    gap: 10px 15px; 
+    padding: 12px 15px;
+    overflow-x: hidden; 
+    overflow-y: auto;   
+  }
+  .section-block {
+    min-width: calc(50% - 10px); 
+  }
+  .instruction-section {
+    display: none; 
+  }
+  .swatch {
+    width: 32px;  
+    height: 32px;
+  }
+  .btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+
+/* 🌟 修改：保留原本橫向螢幕（含平板橫放）的設定 */
+@media (max-width: 1024px) and (orientation: landscape) {
+  #palette { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: 8px 20px; padding: 8px 15px; }
+  .swatch { width: 40px; height: 40px; }
+  .btn { padding: 8px 12px; font-size: 13px; }
+  .instruction-section { min-width: 320px; font-size: 11px; display: block; }
+}
+
+@media (min-width: 1025px) {
+  #palette { flex-wrap: nowrap; justify-content: space-between; gap: 25px; }
+  .instruction-section { max-width: 450px; font-size: 12px; }
+}
+</style>
+</head>
+
+<body>
+
+  <canvas id="paintCanvas"></canvas>
+
+  <div id="palette">
+    <div class="section-block">
+      <h1>🌈 七彩調色盤</h1>
+      <div id="swatches">
+        <div class="swatch active" style="background: #ff5e5e;" data-color="#ff5e5e"></div>
+        <div class="swatch" style="background: #ff9f43;" data-color="#ff9f43"></div>
+        <div class="swatch" style="background: #feca57;" data-color="#feca57"></div>
+        <div class="swatch" style="background: #1dd1a1;" data-color="#1dd1a1"></div>
+        <div class="swatch" style="background: #54a0ff;" data-color="#54a0ff"></div>
+        <div class="swatch dark" style="background: #5f27cd;" data-color="#5f27cd"></div>
+        <div class="swatch dark" style="background: #222f3e;" data-color="#222f3e"></div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h1>🖼 背景選擇</h1>
+      <div class="actions">
+        <button class="btn active" id="bg-blank">⬜ 空白</button>
+        <button class="btn" id="bg-hedgehog">🦔 刺蝟</button>
+        <button class="btn" id="bg-avatar">👤 髮型</button>
+      </div>
+    </div>
+
+    <div class="section-block" id="angle-box">
+      <h1>📐 吸管角度: <span id="angle-val">45°</span></h1>
+      <div class="angle-row">
+        <button class="btn" id="angle-low">🌊 低</button>
+        <input type="range" id="angle-slider" min="15" max="75" value="45">
+        <button class="btn" id="angle-high">🌿 高</button>
+      </div>
+      <div class="angle-ends"><span>15° 粗墨</span><span>75° 細緻</span></div>
+    </div>
+
+    <div class="section-block">
+      <h1>🎤 吹力: <span id="volume-val">0</span><span id="mic-indicator"></span></h1>
+      <div class="actions">
+        <button class="btn" id="btn-mic">▶ 開啟麥克風</button>
+        <button class="btn" id="btn-clear" style="background: #ff6b6b; color: #fff;">🔄 清除</button>
+        <button class="btn" id="btn-save" style="background: #10ac84; color: #fff;">💾 儲存</button>
+      </div>
+    </div>
+
+    <div class="section-block instruction-section">
+      <h1>💡 吹畫指南</h1>
+      <ol>
+        <li>選色後點擊畫布滴下墨水。</li>
+        <li>按住拖曳可調整噴射吹畫的方向。</li>
+        <li>開啟麥克風並吹氣即可享受吹畫樂趣！</li>
+      </ol>
+    </div>
+  </div>
+
+<script>
+const canvas = document.getElementById('paintCanvas');
+const ctx = canvas.getContext('2d');
+
+let currentColor = '#ff5e5e';
+let currentBG = 'blank';
+let blowAngle = 45; 
+let isPressing = false;
+let startX = 0, startY = 0, currentX = 0, currentY = 0;
+let dropletRadius = 5, pressTimer = null, inkParticles = []; 
+let staticDrawings = [];
+
+let audioContext = null, analyser = null, microphone = null, micEnabled = false;
+
+/* 🌟 修改：JavaScript 重新配置畫布高度比例 */
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  
+  if (window.innerWidth <= 1024 && window.innerHeight > window.innerWidth) {
+    canvas.height = window.innerHeight * 0.78; // 直式螢幕分配 78% 高度
+  } else {
+    canvas.height = window.innerHeight * 0.85; // 橫式螢幕分配 85% 高度
+  }
+  
+  drawBackground();
+}
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('DOMContentLoaded', resizeCanvas);
+
+function drawBackground() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const centerY = canvas.height / 2, centerX = canvas.width / 2;
+
+  if (currentBG === 'hedgehog') {
+    ctx.fillStyle = '#eccc68'; ctx.beginPath(); ctx.arc(centerX, centerY + 50, 90, 0, Math.PI, true); ctx.fill();
+    ctx.fillStyle = '#ff7f50'; ctx.beginPath(); ctx.moveTo(centerX - 90, centerY + 50); ctx.lineTo(centerX - 150, centerY + 50); ctx.lineTo(centerX - 90, centerY + 10); ctx.fill();
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(centerX - 125, centerY + 35, 6, 0, Math.PI * 2); ctx.fill();
+  } else if (currentBG === 'avatar') {
+    ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(centerX, centerY + 80, 70, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(centerX - 25, centerY + 70, 5, 0, Math.PI * 2); ctx.arc(centerX + 25, centerY + 70, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ff7f50'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(centerX, centerY + 85, 20, 0, Math.PI); ctx.stroke();
+  }
+  
+  staticDrawings.forEach(item => {
+    ctx.strokeStyle = item.color;
+    ctx.lineWidth = item.width;
+    ctx.beginPath();
+    ctx.moveTo(item.x1, item.y1);
+    ctx.lineTo(item.x2, item.y2);
+    ctx.stroke();
+  });
+
+  inkParticles.forEach(p => {
+    ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+  });
+}
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+function handleStart(e) {
+  if (e.target.tagName === 'CANVAS') {
+    const pos = getPos(e);
+    isPressing = true; startX = currentX = pos.x; startY = currentY = pos.y; dropletRadius = 8;
+    if (pressTimer) clearInterval(pressTimer);
+    pressTimer = setInterval(() => { if (dropletRadius < 25) dropletRadius += 0.5; renderInteraction(); }, 30);
+  }
+}
+
+function handleMove(e) {
+  if (!isPressing) return;
+  const pos = getPos(e); currentX = pos.x; currentY = pos.y;
+  renderInteraction();
+}
+
+function handleEnd() {
+  if (!isPressing) return;
+  isPressing = false; clearInterval(pressTimer);
+  inkParticles.push({ x: startX, y: startY, r: dropletRadius, color: currentColor });
+  if (!micEnabled) { 
+    simulateBlow(50); 
+  }
+  drawBackground();
+}
+
+function renderInteraction() {
+  drawBackground(); if (!isPressing) return;
+  ctx.fillStyle = currentColor; ctx.beginPath(); ctx.arc(startX, startY, dropletRadius, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#4a90e2'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(currentX, currentY);
+  ctx.stroke();
+  ctx.fillStyle = '#4a90e2'; ctx.beginPath(); ctx.arc(currentX, currentY, 5, 0, Math.PI * 2); ctx.fill();
+}
+
+function simulateBlow(intensity) {
+  let dx = currentX - startX;
+  let dy = currentY - startY;
+  let dist = Math.sqrt(dx * dx + dy * dy);
+  if (dist < 5) { dx = 0; dy = -1; dist = 1; }
+  const angle = Math.atan2(dy, dx);
+
+  generateSplatter(startX, startY, angle, intensity, dropletRadius);
+}
+function generateSplatter(x, y, baseAngle, intensity, size) {
+const branches = Math.floor(3 + Math.random() * 4);
+const maxLen = intensity * (5 - (blowAngle / 20)) * (size / 10);
+for (let i = 0; i < branches; i++) {
+const spread = (Math.PI / 3) * (1 - blowAngle / 90);
+const branchAngle = baseAngle + (Math.random() - 0.5) * spread;
+const len = maxLen * (0.4 + Math.random() * 0.6);
+let currX = x;
+let currY = y;
+const segments = 5;
+for (let j = 0; j < segments; j++) {
+const segLen = (len / segments);
+const nextX = currX + Math.cos(branchAngle + (Math.random() - 0.5) * 0.3) * segLen;
+const nextY = currY + Math.sin(branchAngle + (Math.random() - 0.5) * 0.3) * segLen;
+const strokeWidth = Math.max(1, (size * (1 - blowAngle / 90)) * (1 - j / segments));
+staticDrawings.push({
+x1: currX, y1: currY,
+x2: nextX, y2: nextY,
+color: currentColor,
+width: strokeWidth
+});
+currX = nextX;
+currY = nextY;
+}
+}
+}
+canvas.addEventListener('mousedown', handleStart);
+canvas.addEventListener('mousemove', handleMove);
+window.addEventListener('mouseup', handleEnd);
+canvas.addEventListener('touchstart', handleStart, { passive: true });
+canvas.addEventListener('touchmove', handleMove, { passive: true });
+window.addEventListener('touchend', handleEnd);
+document.getElementById('swatches').addEventListener('click', (e) => {
+const swatch = e.target.closest('.swatch');
+if (!swatch) return;
+document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+swatch.classList.add('active');
+currentColor = swatch.dataset.color;
+});
+const bgBtns = ['bg-blank', 'bg-hedgehog', 'bg-avatar'];
+bgBtns.forEach(id => {
+document.getElementById(id).addEventListener('click', (e) => {
+bgBtns.forEach(b => document.getElementById(b).classList.remove('active'));
+e.target.classList.add('active');
+currentBG = id.replace('bg-', '');
+drawBackground();
+});
+});
+const slider = document.getElementById('angle-slider');
+const angleVal = document.getElementById('angle-val');
+slider.addEventListener('input', (e) => {
+blowAngle = parseInt(e.target.value);
+angleVal.textContent = blowAngle + '°';
+});
+document.getElementById('angle-low').addEventListener('click', () => { slider.value = 15; slider.dispatchEvent(new Event('input')); });
+document.getElementById('angle-high').addEventListener('click', () => { slider.value = 75; slider.dispatchEvent(new Event('input')); });
+document.getElementById('btn-clear').addEventListener('click', () => {
+inkParticles = [];
+staticDrawings = [];
+drawBackground();
+});
+document.getElementById('btn-save').addEventListener('click', () => {
+const link = document.createElement('a');
+link.download = 'straw-painting.png';
+link.href = canvas.toDataURL();
+link.click();
+});
+const micBtn = document.getElementById('btn-mic');
+const volVal = document.getElementById('volume-val');
+const micInd = document.getElementById('mic-indicator');
+micBtn.addEventListener('click', async () => {
+if (micEnabled) {
+micEnabled = false;
+micBtn.classList.remove('active');
+micBtn.textContent = '▶ 開啟麥克風';
+if (audioContext) audioContext.close();
+return;
+}
+try {
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+audioContext = new (window.AudioContext || window.webkitAudioContext)();
+analyser = audioContext.createAnalyser();
+microphone = audioContext.createMediaStreamSource(stream);
+microphone.connect(analyser);
+analyser.fftSize = 256;
+micEnabled = true;
+micBtn.classList.add('active');
+micBtn.textContent = '⏸ 關閉麥克風';
+updateMicLevel();
+} catch (err) {
+alert('無法獲取麥克風權限：' + err);
+}
+});
+function updateMicLevel() {
+if (!micEnabled) return;
+const dataArray = new Uint8Array(analyser.frequencyBinCount);
+analyser.getByteFrequencyData(dataArray);
+let sum = 0;
+for (let i = 0; i < dataArray.length; i++) { sum += dataArray[i]; }
+let average = sum / dataArray.length;
+let volume = Math.floor(average);
+volVal.textContent = volume;
+micInd.style.transform = scale(${1 + volume / 10});
+micInd.style.background = volume > 30 ? '#ff6b6b' : '#10ac84';
+if (volume > 25 && isPressing) {
+simulateBlow(volume * 0.8);
+drawBackground();
+}
+requestAnimationFrame(updateMicLevel);
+}
