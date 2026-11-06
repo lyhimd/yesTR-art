@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>七彩虹吸管吹畫</title>
+<style>
+/* ==========================================================================
+   1. 共同基礎樣式 (電腦與平板通用)
+   ========================================================================== */
+body {
+  margin: 0; padding: 0;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  background-color: #f5f5f5;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 🎨 上方：畫布區（精確佔用 85% 高度） */
+canvas {
+  display: block;
+  width: 100vw;
+  height: 85vh;
+  background: #fff;
+  box-sizing: border-box;
+  cursor: crosshair;
+}
+
+/* 🌈 下方：七彩調色盤與控制區（精確佔用 15% 高度） */
+#palette {
+  position: fixed; bottom: 0; left: 0;
+  width: 100vw;
+  height: 15vh;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 10px 20px;
+  box-sizing: border-box;
+  box-shadow: 0 -4px 16px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+}
+
+/* 內部元件基礎微調 */
+#palette h1 { font-size: 13px; margin: 0 0 4px; color: #555; white-space: nowrap; }
+.section-block { display: flex; flex-direction: column; justify-content: center; }
+
+#swatches { display: flex; gap: 6px; }
+.swatch {
+  position: relative; width: 36px; height: 36px; border-radius: 50%;
+  border: 3px solid #fff; cursor: pointer; padding: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  transition: transform .12s ease, box-shadow .12s ease;
+  flex-shrink: 0;
+}
+.swatch::before {
+  content: ""; position: absolute; left: 8px; top: 10px; width: 4px; height: 4px;
+  background: #333; border-radius: 50%; box-shadow: 10px 0 0 #333;
+}
+.swatch::after {
+  content: ""; position: absolute; left: 9px; top: 16px; width: 8px; height: 4px;
+  border: 2px solid #333; border-top: none; border-radius: 0 0 8px 8px;
+}
+.swatch.dark::before { background: #fff; box-shadow: 10px 0 0 #fff; }
+.swatch.dark::after { border-color: #fff; }
+.swatch:active { transform: scale(.92); }
+.swatch.active { transform: scale(1.15); box-shadow: 0 0 0 2px #444, 0 4px 8px rgba(0,0,0,.25); }
+
+.actions { display: flex; gap: 6px; }
+.btn {
+  border: none; border-radius: 10px; padding: 6px 12px; font-weight: bold; font-size: 13px;
+  cursor: pointer; background: #fff; color: #444; box-shadow: 0 2px 5px rgba(0,0,0,.15);
+  white-space: nowrap;
+}
+.btn:active { transform: scale(.96); }
+.btn.active { background: #4a90e2; color: #fff; }
+
+#angle-box { min-width: 160px; }
+.angle-row { display: flex; align-items: center; gap: 6px; }
+.angle-row input { flex: 1; touch-action: none; }
+.angle-ends { display: flex; justify-content: space-between; font-size: 10px; color: #888; }
+
+.instruction-section {
+  color: #666;
+  line-height: 1.4;
+}
+.instruction-section ol { margin: 0; padding-left: 18px; }
+
+/* ==========================================================================
+   2. 📱 平板電腦偏窄螢幕適配 (螢幕寬度 1024px 以下)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  #palette {
+    flex-wrap: wrap;
+    align-content: space-around;
+    gap: 8px 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px 15px;
+  }
+  .swatch { width: 40px; height: 40px; }
+  .btn { padding: 8px 12px; font-size: 13px; }
+  .instruction-section { min-width: 320px; font-size: 11px; }
+}
+
+/* ==========================================================================
+   3. 💻 電腦寬螢幕適配 (螢幕寬度 1025px 以上)
+   ========================================================================== */
+@media (min-width: 1025px) {
+  #palette {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 25px;
+  }
+  .instruction-section { max-width: 450px; font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+  <!-- 🎨 上方畫布區域 -->
+  <canvas id="paintCanvas"></canvas>
+
+  <!-- 🌈 下方調色盤與控制面板 -->
+  <div id="palette">
+    <!-- 1. 七彩調色盤 -->
+    <div class="section-block">
+      <h1>🌈 七彩調色盤</h1>
+      <div id="swatches">
+        <div class="swatch active" style="background: #ff5e5e;" data-color="#ff5e5e"></div>
+        <div class="swatch" style="background: #ff9f43;" data-color="#ff9f43"></div>
+        <div class="swatch" style="background: #feca57;" data-color="#feca57"></div>
+        <div class="swatch" style="background: #1dd1a1;" data-color="#1dd1a1"></div>
+        <div class="swatch" style="background: #54a0ff;" data-color="#54a0ff"></div>
+        <div class="swatch dark" style="background: #5f27cd;" data-color="#5f27cd"></div>
+        <div class="swatch dark" style="background: #222f3e;" data-color="#222f3e"></div>
+      </div>
+    </div>
+
+    <!-- 2. 畫布背景選擇 -->
+    <div class="section-block">
+      <h1>🖼 畫布背景選擇</h1>
+      <div class="actions">
+        <button class="btn active" id="bg-blank">⬜ 空白畫布</button>
+        <button class="btn" id="bg-hedgehog">🦔 小刺蝟</button>
+        <button class="btn" id="bg-avatar">👤 百變髮型</button>
+      </div>
+    </div>
+
+    <!-- 3. 吸管角度調整 -->
+    <div class="section-block" id="angle-box">
+      <h1>📐 吸管角度調整: <span id="angle-val">45°</span></h1>
+      <div class="angle-row">
+        <button class="btn" id="angle-low">🌊 低角度</button>
+        <input type="range" id="angle-slider" min="15" max="75" value="45">
+        <button class="btn" id="angle-high">🌿 高角度</button>
+      </div>
+      <div class="angle-ends">
+        <span>15° (大面積粗墨)</span>
+        <span>75° (細緻樹枝)</span>
+      </div>
+    </div>
+
+    <!-- 4. 麥克風與系統功能 -->
+    <div class="section-block">
+      <h1>🎤 吹力偵測: <span id="volume-val">0</span></h1>
+      <div class="actions">
+        <button class="btn" id="btn-mic">▶ 開啟麥克風</button>
+        <button class="btn" id="btn-clear" style="background: #ff6b6b; color: #fff;">🔄 清除重來</button>
+        <button class="btn" id="btn-save" style="background: #10ac84; color: #fff;">💾 儲存作品</button>
+      </div>
+    </div>
+
+    <!-- 5. 操作說明 -->
+    <div class="section-block instruction-section">
+      <h1>💡 吹畫指南</h1>
+      <ol>
+        <li>點選顏色</li>
+        <li>點擊或觸控畫布滴下墨水水滴（按著不放會變大）</li>
+        <li>滑鼠移動或手指拖曳可調整吹畫噴射方向（畫面上顯示箭頭）</li>
+        <li>對麥克風吹氣（或點擊下方功能），墨水就會順著方向衝出去！</li>
+      </ol>
+    </div>
+  </div>
+
+<script>
+const canvas = document.getElementById('paintCanvas');
+const ctx = canvas.getContext('2d');
+
+// 狀態控制
+let currentColor = '#ff5e5e';
+let currentBG = 'blank';
+let blowAngle = 45; 
+let isPressing = false;
+let startX = 0, startY = 0;
+let currentX = 0, currentY = 0;
+let dropletRadius = 5;
+let pressTimer = null;
+let inkParticles = []; 
+
+// 麥克風音量相關
+let audioContext = null;
+let analyser = null;
+let microphone = null;
+let javascriptNode = null;
+let micEnabled = false;
+
+// 1. 初始化畫布尺寸（精確綁定 85vh 高度）
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight * 0.85;
+  drawBackground();
+}
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('DOMContentLoaded', resizeCanvas);
+
+// 2. 繪製背景圖案（模擬預設模板）
+function drawBackground() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  if (currentBG === 'hedgehog') {
+    // 繪製刺蝟身體草稿
+    ctx.fillStyle = '#eccc68';
+    ctx.beginPath();
+    ctx.arc(canvas.width / 2, canvas.height / 2 + 50, 80, 0, Math.PI, true);
+    ctx.fill();
+    ctx.fillStyle = '#ff7f50';
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2 - 80, canvas.height / 2 + 50);
+    ctx.lineTo(canvas.width / 2 - 130, canvas.height / 2 + 50);
+    ctx.lineTo(canvas.width / 2 - 80, canvas.height / 2 + 20);
+    ctx.fill();
+  } else if (currentBG === 'avatar') {
+    // 繪製百變髮型人物光頭草稿
+    ctx.fillStyle = '#ffdbac';
+    ctx.beginPath();
+    ctx.arc(canvas.width / 2, canvas.height / 2 + 80, 70, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // 重新渲染現有的水痕墨水粒子
+  inkParticles.forEach(p => {
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+// 3. 座標獲取（適配滑鼠與多點觸控，自動計算邊界偏移）
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: clientX - rect.left,
+    y: clientY - rect.top
+  };
+}
+
+// 4. 滑鼠/觸控互動邏輯
+function handleStart(e) {
+  if (e.target.tagName === 'CANVAS') {
+    const pos = getPos(e);
+    isPressing = true;
+    startX = currentX = pos.x;
+    startY = currentY = pos.y;
+    dropletRadius = 8;
+    
+    // 長按使水滴逐漸擴大
+    if (pressTimer) clearInterval(pressTimer);
+    pressTimer = setInterval(() => {
+      if (dropletRadius < 25) dropletRadius += 0.5;
+      renderInteraction();
+    }, 30);
+  }
+}
+
+function handleMove(e) {
+  if (!isPressing) return;
+  const pos = getPos(e);
+  currentX = pos.x;
+  currentY = pos.y;
+  renderInteraction();
+}
+
+function handleEnd() {
+  if (!isPressing) return;
+  isPressing = false;
+  clearInterval(pressTimer);
+  
+  // 將生成的核心水滴固化記錄到墨水陣列中
+  inkParticles.push({ x: startX, y: startY, r: dropletRadius, color: currentColor });
+  
+  // 如果沒有啟用麥克風，手指/滑鼠放開時即自動模擬一次朝箭頭方向「自動吹畫」效果
+  if (!micEnabled) {
+    simulateBlow(50); 
+  }
+  drawBackground();
+}
+
+// 5. 渲染即時拖曳產生的方向箭頭與擴大水滴
+function renderInteraction() {
+  drawBackground();
+  if (!isPressing) return;
+  
+  // 畫即時蓄力水滴
+  ctx.fillStyle = currentColor;
+  ctx.beginPath();
+  ctx.arc(startX, startY, dropletRadius, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // 畫引導線/箭頭
+  ctx.strokeStyle = '#4a90e2';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(startX, startY);
+  ctx.lineTo(currentX, currentY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// 6. 核心吹畫物理效果演算 (基於吸管角度調整)
+function simulateBlow(force) {
+  if (startX === currentX && startY === currentY) return;
+  
+  // 計算拖曳的方向角度
+  const angle = Math.atan2(currentY - startY, currentX - startX);
+  
+  // 根據吸管傾斜角度控制吹畫物理特徵
+  // 低角度(15°)：長度長、擴散半徑大(粗墨)；高角度(75°)：長度短、擴散小分叉細(細緻樹枝)
+  const angleRad = (blowAngle * Math.PI) / 180;
+  const lengthMultiplier = Math.cos(angleRad) * (force * 3);
+  const branchCount = Math.floor(dropletRadius * (15 / blowAngle)) + 5; 
+
