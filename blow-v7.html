@@ -8,53 +8,34 @@
 <a href="index.html">點我前往v6版</a>
    
 <style>
-/* ==========================================================================
-   1. 共同基礎樣式 (電腦與平板通用)
-   ========================================================================== */
 body {
   margin: 0; padding: 0;
   width: 100vw; height: 100vh;
   overflow: hidden;
   background-color: #f5f5f5;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  user-select: none;
-  -webkit-user-select: none;
+  user-select: none; -webkit-user-select: none;
 }
-
-/* 🎨 上方：畫布區（精確佔用 85% 高度） */
 canvas {
-  display: block;
-  width: 100vw;
-  height: 85vh;
-  background: #fff;
-  box-sizing: border-box;
-  cursor: crosshair;
+  display: block; width: 100vw; height: 85vh;
+  background: #fff; box-sizing: border-box; cursor: crosshair;
 }
-
-/* 🌈 下方：七彩調色盤與控制區（精確佔用 15% 高度） */
 #palette {
   position: fixed; bottom: 0; left: 0;
-  width: 100vw;
-  height: 15vh;
-  z-index: 10;
+  width: 100vw; height: 15vh; z-index: 10;
   background: rgba(255, 255, 255, 0.96);
-  padding: 10px 20px;
-  box-sizing: border-box;
+  padding: 10px 20px; box-sizing: border-box;
   box-shadow: 0 -4px 16px rgba(0,0,0,0.12);
-  display: flex;
-  align-items: center;
+  display: flex; align-items: center;
 }
-
 #palette h1 { font-size: 13px; margin: 0 0 4px; color: #555; white-space: nowrap; }
 .section-block { display: flex; flex-direction: column; justify-content: center; }
-
 #swatches { display: flex; gap: 6px; }
 .swatch {
   position: relative; width: 36px; height: 36px; border-radius: 50%;
   border: 3px solid #fff; cursor: pointer; padding: 0;
   box-shadow: 0 2px 6px rgba(0,0,0,.2);
-  transition: transform .12s ease, box-shadow .12s ease;
-  flex-shrink: 0;
+  transition: transform .12s ease, box-shadow .12s ease; flex-shrink: 0;
 }
 .swatch::before {
   content: ""; position: absolute; left: 8px; top: 10px; width: 4px; height: 4px;
@@ -68,7 +49,6 @@ canvas {
 .swatch.dark::after { border-color: #fff; }
 .swatch:active { transform: scale(.92); }
 .swatch.active { transform: scale(1.15); box-shadow: 0 0 0 2px #444, 0 4px 8px rgba(0,0,0,.25); }
-
 .actions { display: flex; align-items: center; gap: 6px; }
 .btn {
   border: none; border-radius: 10px; padding: 6px 12px; font-weight: bold; font-size: 13px;
@@ -77,60 +57,34 @@ canvas {
 }
 .btn:active { transform: scale(.96); }
 .btn.active { background: #4a90e2; color: #fff; }
-
-/* 🎤 麥克風偵測小亮點 */
 #mic-indicator {
   width: 8px; height: 8px; background: #ccc; border-radius: 50%;
-  display: inline-block; margin-left: 4px; transition: transform 0.05s ease, background 0.2s;
+  display: inline-block; margin-left: 4px; transition: transform 0.05s ease;
 }
-
 #angle-box { min-width: 160px; }
 .angle-row { display: flex; align-items: center; gap: 6px; }
 .angle-row input { flex: 1; touch-action: none; }
 .angle-ends { display: flex; justify-content: space-between; font-size: 10px; color: #888; }
-
 .instruction-section { color: #666; line-height: 1.4; }
 .instruction-section ol { margin: 0; padding-left: 18px; }
 
-/* ==========================================================================
-   2. 📱 平板電腦偏窄螢幕適配 (螢幕寬度 1024px 以下)
-   ========================================================================== */
 @media (max-width: 1024px) {
-  #palette {
-    flex-wrap: wrap;
-    align-content: space-around;
-    gap: 8px 20px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 8px 15px;
-  }
+  #palette { flex-wrap: wrap; align-content: space-around; gap: 8px 20px; overflow-x: auto; overflow-y: hidden; padding: 8px 15px; }
   .swatch { width: 40px; height: 40px; }
   .btn { padding: 8px 12px; font-size: 13px; }
   .instruction-section { min-width: 320px; font-size: 11px; }
 }
-
-/* ==========================================================================
-   3. 💻 電腦寬螢幕適配 (螢幕寬度 1025px 以上)
-   ========================================================================== */
 @media (min-width: 1025px) {
-  #palette {
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    gap: 25px;
-  }
+  #palette { flex-wrap: nowrap; justify-content: space-between; gap: 25px; }
   .instruction-section { max-width: 450px; font-size: 12px; }
 }
 </style>
 </head>
-</html>
 <body>
 
-  <!-- 🎨 繪圖畫布區 -->
   <canvas id="paintCanvas"></canvas>
 
-  <!-- 🌈 底部控制面板 -->
   <div id="palette">
-    <!-- 1. 七彩調色盤 -->
     <div class="section-block">
       <h1>🌈 七彩調色盤</h1>
       <div id="swatches">
@@ -144,48 +98,40 @@ canvas {
       </div>
     </div>
 
-    <!-- 2. 畫布背景選擇 -->
     <div class="section-block">
-      <h1>🖼 畫布背景選擇</h1>
+      <h1>🖼 背景選擇</h1>
       <div class="actions">
-        <button class="btn active" id="bg-blank">⬜ 空白畫布</button>
-        <button class="btn" id="bg-hedgehog">🦔 小刺蝟</button>
-        <button class="btn" id="bg-avatar">👤 百變髮型</button>
+        <button class="btn active" id="bg-blank">⬜ 空白</button>
+        <button class="btn" id="bg-hedgehog">🦔 刺蝟</button>
+        <button class="btn" id="bg-avatar">👤 髮型</button>
       </div>
     </div>
 
-    <!-- 3. 吸管角度調整 -->
     <div class="section-block" id="angle-box">
-      <h1>📐 吸管角度調整: <span id="angle-val">45°</span></h1>
+      <h1>📐 吸管角度: <span id="angle-val">45°</span></h1>
       <div class="angle-row">
-        <button class="btn" id="angle-low">🌊 低角度</button>
+        <button class="btn" id="angle-low">🌊 低</button>
         <input type="range" id="angle-slider" min="15" max="75" value="45">
-        <button class="btn" id="angle-high">🌿 高角度</button>
+        <button class="btn" id="angle-high">🌿 高</button>
       </div>
-      <div class="angle-ends">
-        <span>15° (大面積粗墨)</span>
-        <span>75° (細緻樹枝)</span>
-      </div>
+      <div class="angle-ends"><span>15° 粗墨</span><span>75° 細緻</span></div>
     </div>
 
-    <!-- 4. 麥克風與系統功能 -->
     <div class="section-block">
-      <h1>🎤 吹力偵測: <span id="volume-val">0</span><span id="mic-indicator"></span></h1>
+      <h1>🎤 吹力: <span id="volume-val">0</span><span id="mic-indicator"></span></h1>
       <div class="actions">
         <button class="btn" id="btn-mic">▶ 開啟麥克風</button>
-        <button class="btn" id="btn-clear" style="background: #ff6b6b; color: #fff;">🔄 清除重來</button>
-        <button class="btn" id="btn-save" style="background: #10ac84; color: #fff;">💾 儲存作品</button>
+        <button class="btn" id="btn-clear" style="background: #ff6b6b; color: #fff;">🔄 清除</button>
+        <button class="btn" id="btn-save" style="background: #10ac84; color: #fff;">💾 儲存</button>
       </div>
     </div>
 
-    <!-- 5. 操作說明 -->
     <div class="section-block instruction-section">
       <h1>💡 吹畫指南</h1>
       <ol>
-        <li>點選顏色。</li>
-        <li>點擊或觸控畫布滴下墨水水滴（按著不放會變大）。</li>
-        <li>滑鼠移動或手指拖曳可調整吹畫噴射方向（畫面上會顯示導引線）。</li>
-        <li>對麥克風吹氣（或關閉麥克風時放開滑鼠），墨水就會順著方向衝出去！</li>
+        <li>選色後點擊畫布滴下墨水。</li>
+        <li>按住拖曳可調整噴射吹畫的方向。</li>
+        <li>開啟麥克風並吹氣即可享受吹畫樂趣！</li>
       </ol>
     </div>
   </div>
@@ -198,16 +144,10 @@ let currentColor = '#ff5e5e';
 let currentBG = 'blank';
 let blowAngle = 45; 
 let isPressing = false;
-let startX = 0, startY = 0;
-let currentX = 0, currentY = 0;
-let dropletRadius = 5;
-let pressTimer = null;
-let inkParticles = []; 
+let startX = 0, startY = 0, currentX = 0, currentY = 0;
+let dropletRadius = 5, pressTimer = null, inkParticles = []; 
 
-let audioContext = null;
-let analyser = null;
-let microphone = null;
-let micEnabled = false;
+let audioContext = null, analyser = null, microphone = null, micEnabled = false;
 
 function resizeCanvas() {
   canvas.width = window.innerWidth;
@@ -219,108 +159,155 @@ window.addEventListener('DOMContentLoaded', resizeCanvas);
 
 function drawBackground() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const centerY = canvas.height / 2;
-  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2, centerX = canvas.width / 2;
 
   if (currentBG === 'hedgehog') {
-    ctx.fillStyle = '#eccc68';
-    ctx.beginPath();
-    ctx.arc(centerX, centerY + 30, 80, 0, Math.PI, true);
-    ctx.fill();
-    ctx.fillStyle = '#ff7f50';
-    ctx.beginPath();
-    ctx.moveTo(centerX - 80, centerY + 30);
-    ctx.lineTo(centerX - 130, centerY + 30);
-    ctx.lineTo(centerX - 80, centerY);
-    ctx.fill();
+    ctx.fillStyle = '#eccc68'; ctx.beginPath(); ctx.arc(centerX, centerY + 30, 80, 0, Math.PI, true); ctx.fill();
+    ctx.fillStyle = '#ff7f50'; ctx.beginPath(); ctx.moveTo(centerX - 80, centerY + 30); ctx.lineTo(centerX - 130, centerY + 30); ctx.lineTo(centerX - 80, centerY); ctx.fill();
   } else if (currentBG === 'avatar') {
-    ctx.fillStyle = '#ffdbac';
-    ctx.beginPath();
-    ctx.arc(centerX, centerY + 40, 70, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = '#ffdbac'; ctx.beginPath(); ctx.arc(centerX, centerY + 40, 70, 0, Math.PI * 2); ctx.fill();
   }
   
   inkParticles.forEach(p => {
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
   });
 }
 
 function getPos(e) {
   const rect = canvas.getBoundingClientRect();
-  const clientX = e.touches ? e.touches.clientX : e.clientX;
-  const clientY = e.touches ? e.touches.clientY : e.clientY;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
   return { x: clientX - rect.left, y: clientY - rect.top };
 }
 
 function handleStart(e) {
   if (e.target.tagName === 'CANVAS') {
     const pos = getPos(e);
-    isPressing = true;
-    startX = currentX = pos.x;
-    startY = currentY = pos.y;
-    dropletRadius = 8;
-    
+    isPressing = true; startX = currentX = pos.x; startY = currentY = pos.y; dropletRadius = 8;
     if (pressTimer) clearInterval(pressTimer);
-    pressTimer = setInterval(() => {
-      if (dropletRadius < 25) dropletRadius += 0.5;
-      renderInteraction();
-    }, 30);
+    pressTimer = setInterval(() => { if (dropletRadius < 25) dropletRadius += 0.5; renderInteraction(); }, 30);
   }
 }
 
 function handleMove(e) {
   if (!isPressing) return;
-  const pos = getPos(e);
-  currentX = pos.x;
-  currentY = pos.y;
+  const pos = getPos(e); currentX = pos.x; currentY = pos.y;
   renderInteraction();
 }
 
 function handleEnd() {
   if (!isPressing) return;
-  isPressing = false;
-  clearInterval(pressTimer);
-  
+  isPressing = false; clearInterval(pressTimer);
   inkParticles.push({ x: startX, y: startY, r: dropletRadius, color: currentColor });
-  
-  if (!micEnabled) {
-    simulateBlow(50); 
-  }
+  if (!micEnabled) { simulateBlow(50); }
   drawBackground();
 }
 
 function renderInteraction() {
-  drawBackground();
-  if (!isPressing) return;
-  
-  ctx.fillStyle = currentColor;
-  ctx.beginPath();
-  ctx.arc(startX, startY, dropletRadius, 0, Math.PI * 2);
-  ctx.fill();
-  
-  ctx.strokeStyle = '#4a90e2';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(startX, startY);
-  ctx.lineTo(currentX, currentY);
-  ctx.stroke();
+  drawBackground(); if (!isPressing) return;
+  ctx.fillStyle = currentColor; ctx.beginPath(); ctx.arc(startX, startY, dropletRadius, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#4a90e2'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(currentX, currentY); ctx.stroke();
 }
 
 function simulateBlow(force) {
   if (startX === currentX && startY === currentY) return;
-  
   const angle = Math.atan2(currentY - startY, currentX - startX);
   const angleRad = (blowAngle * Math.PI) / 180;
   const lengthMultiplier = Math.cos(angleRad) * (force * 3);
   const branchCount = Math.floor(dropletRadius * (15 / blowAngle)) + 5; 
 
   for (let i = 0; i < branchCount; i++) {
-    let segmentX = startX;
-    let segmentY = startY;
-    let segmentR = (Math.random() * (dropletRadius / 3)) + 1;
+    let segmentX = startX, segmentY = startY, segmentR = (Math.random() * (dropletRadius / 3)) + 1;
     const branchLength = (Math.random() * lengthMultiplier) + 20;
-    
     for (let j = 0; j < branchLength; j++) {
+      const jitter = (Math.random() - 0.5) * (1.2 - (blowAngle / 90));
+      segmentX += Math.cos(angle + jitter) * 2; segmentY += Math.sin(angle + jitter) * 2; segmentR *= 0.96;
+      if (segmentR < 0.3) break;
+      inkParticles.push({ x: segmentX, y: segmentY, r: segmentR, color: currentColor });
+    }
+  }
+}
+
+// 🎯 以下為 UI 控制與麥克風核心邏輯，保證完整寫完
+window.addEventListener('mousedown', handleStart);
+window.addEventListener('mousemove', handleMove);
+window.addEventListener('mouseup', handleEnd);
+canvas.addEventListener('touchstart', handleStart, { passive: true });
+window.addEventListener('touchmove', handleMove, { passive: true });
+window.addEventListener('touchend', handleEnd, { passive: true });
+
+// 1. 調色盤切換事件
+document.getElementById('swatches').addEventListener('click', (e) => {
+  if (e.target.classList.contains('swatch')) {
+    document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+    e.target.classList.add('active');
+    currentColor = e.target.getAttribute('data-color');
+  }
+});
+
+// 2. 背景切換事件
+const bgButtons = [document.getElementById('bg-blank'), document.getElementById('bg-hedgehog'), document.getElementById('bg-avatar')];
+bgButtons.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+bgButtons.forEach(b => b.classList.remove('active'));
+e.target.classList.add('active');
+currentBG = e.target.id.replace('bg-', '');
+drawBackground();
+});
+});
+// 3. 角度控制事件
+const slider = document.getElementById('angle-slider');
+const angleVal = document.getElementById('angle-val');
+function updateAngle(val) {
+blowAngle = parseInt(val); slider.value = val; angleVal.textContent = val + '°';
+}
+slider.addEventListener('input', (e) => updateAngle(e.target.value));
+document.getElementById('angle-low').addEventListener('click', () => updateAngle(15));
+document.getElementById('angle-high').addEventListener('click', () => updateAngle(75));
+// 4. 功能性按鈕（清除與儲存）
+document.getElementById('btn-clear').addEventListener('click', () => { inkParticles = []; drawBackground(); });
+document.getElementById('btn-save').addEventListener('click', () => {
+const link = document.createElement('a'); link.download = '吹畫作品.png'; link.href = canvas.toDataURL(); link.click();
+});
+// 5. 麥克風音量動畫分析迴圈
+const btnMic = document.getElementById('btn-mic');
+const volumeVal = document.getElementById('volume-val');
+const micIndicator = document.getElementById('mic-indicator');
+function updateMicVolumeLoop() {
+if (!micEnabled || !analyser) return;
+const array = new Uint8Array(analyser.frequencyBinCount);
+analyser.getByteFrequencyData(array);
+let values = 0, length = array.length;
+for (let i = 0; i < length; i++) { values += array[i]; }
+const displayVol = Math.round(values / length);
+volumeVal.textContent = displayVol;
+if (displayVol > 10) {
+micIndicator.style.background = '#2ecc71'; micIndicator.style.transform = scale(${1 + displayVol / 50});
+} else {
+micIndicator.style.background = '#27ae60'; micIndicator.style.transform = 'scale(1)';
+}
+if (displayVol > 30 && isPressing) { simulateBlow(displayVol); drawBackground(); }
+requestAnimationFrame(updateMicVolumeLoop);
+}
+// 6. 點擊開啟麥克風監聽
+btnMic.addEventListener('click', async () => {
+if (micEnabled) return;
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+alert("❌ 瀏覽器安全性政策限制！\n\n現代瀏覽器出於隱私考量，規定麥克風等設備「只能在具有安全的 HTTPS 連線網址」或「localhost」下啟動。直接從資料夾按兩下打開本機的 .html 檔案會被直接拒絕。\n\n💡 解決辦法：請將此程式碼整段複製，直接貼到線上網頁測試平台（如 CodePen.io 或 JSFiddle.net）並按下執行，就能直接允許並順利啟用麥克風囉！");
+return;
+}
+try {
+const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+audioContext = new (window.AudioContext || window.webkitAudioContext)();
+if (audioContext.state === 'suspended') { await audioContext.resume(); }
+analyser = audioContext.createAnalyser();
+microphone = audioContext.createMediaStreamSource(stream);
+analyser.smoothingTimeConstant = 0.15; analyser.fftSize = 256;
+microphone.connect(analyser);
+micEnabled = true; btnMic.textContent = '🎤 麥克風偵測中'; btnMic.classList.add('active');
+micIndicator.style.background = '#27ae60';
+updateMicVolumeLoop();
+} catch (err) {
+alert('❌ 麥克風啟動失敗，請確認已核准麥克風權限！');
+}
+});
